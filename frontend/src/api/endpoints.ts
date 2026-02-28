@@ -1,0 +1,51 @@
+export const endpoints = {
+  auth: {
+    login: '/api/auth/login',
+    logout: '/api/auth/logout',
+    me: '/api/auth/me',
+  },
+  categories: {
+    list: '/api/categories',
+    create: '/api/categories',
+    get: (id: string) => `/api/categories/${encodeURIComponent(id)}`,
+    update: (id: string) => `/api/categories/${encodeURIComponent(id)}`,
+    delete: (id: string) => `/api/categories/${encodeURIComponent(id)}`,
+    reorder: '/api/categories/reorder',
+  },
+  dishes: {
+    list: '/api/dishes',
+    create: '/api/dishes',
+    get: (id: string) => `/api/dishes/${encodeURIComponent(id)}`,
+    update: (id: string) => `/api/dishes/${encodeURIComponent(id)}`,
+    delete: (id: string) => `/api/dishes/${encodeURIComponent(id)}`,
+    toggleStatus: (id: string) => `/api/dishes/${encodeURIComponent(id)}/toggle-status`,
+  },
+  orders: {
+    list: '/api/orders',
+    create: '/api/orders',
+    get: (id: string) => `/api/orders/${encodeURIComponent(id)}`,
+    updateStatus: (id: string) => `/api/orders/${encodeURIComponent(id)}/status`,
+    history: '/api/orders/history',
+  },
+  payments: {
+    initiate: '/api/payments/initiate',
+    get: (paymentId: string) => `/api/payments/${encodeURIComponent(paymentId)}`,
+    byOrderId: (orderId: string) => `/api/orders/${encodeURIComponent(orderId)}/payments`,
+    refund: (paymentId: string) => `/api/payments/${encodeURIComponent(paymentId)}/refund`,
+  },
+  tables: {
+    publicList: '/api/public/tables',
+    list: '/api/tables',
+    create: '/api/tables',
+    get: (id: string) => `/api/tables/${encodeURIComponent(id)}`,
+    update: (id: string) => `/api/tables/${encodeURIComponent(id)}`,
+    delete: (id: string) => `/api/tables/${encodeURIComponent(id)}`,
+    updateStatus: (id: string) => `/api/tables/${encodeURIComponent(id)}/status`,
+    areas: '/api/tables/areas',
+  },
+  store: {
+    info: '/api/store',
+    businessHours: '/api/store/business-hours',
+    deliverySettings: '/api/store/delivery-settings',
+  },
+} as const

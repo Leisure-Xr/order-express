@@ -1,0 +1,60 @@
+@use './variables' as *;
+
+// Element Plus component-level CSS variable overrides.
+// These sit on component root selectors (e.g. `.el-card`) to override
+// `set-component-css-var(...)` defaults from Element Plus.
+
+.el-card {
+  --el-card-border-radius: var(--app-radius-md);
+  --el-card-padding: 16px;
+  --el-card-border-color: rgba(2, 6, 23, 0.06);
+  --el-card-bg-color: #ffffff;
+}
+
+.el-dialog {
+  --el-dialog-border-radius: var(--app-radius-lg);
+  --el-dialog-padding-primary: 18px;
+  --el-dialog-box-shadow: var(--el-box-shadow-light);
+}
+
+.el-input,
+.el-textarea {
+  --el-input-border-radius: 12px;
+}
+
+.el-tag {
+  --el-tag-border-radius: 999px;
+}
+
+.el-table {
+  --el-table-border-color: rgba(2, 6, 23, 0.06);
+  --el-table-header-bg-color: rgba(2, 6, 23, 0.02);
+  --el-table-row-hover-bg-color: rgba(231, 76, 60, 0.06);
+  --el-table-current-row-bg-color: rgba(231, 76, 60, 0.08);
+
+  border-radius: var(--app-radius-md);
+}
+
+// Clip borders/hover backgrounds to the rounded container.
+.el-table__inner-wrapper {
+  border-radius: var(--app-radius-md);
+}
+
+.el-table--border {
+  border-radius: var(--app-radius-md);
+}
+
+// Table headers feel more "dashboard" with slightly stronger weight.
+.el-table th.el-table__cell {
+  font-weight: 700;
+}
+
+// Tabs: make labels slightly bolder and spacing a bit more modern.
+.el-tabs {
+  --el-tabs-header-height: 44px;
+}
+
+.el-tabs__item {
+  font-weight: 700;
+}
+

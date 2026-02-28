@@ -1,0 +1,31 @@
+@use './variables' as *;
+
+.admin-layout {
+  height: 100vh;
+
+  .admin-sidebar {
+    background-color: $bg-dark;
+    transition: width 0.3s;
+
+    .el-menu {
+      border-right: none;
+      background-color: $bg-dark;
+    }
+  }
+
+  .admin-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 $spacing-lg;
+    height: 60px;
+    background: $bg-white;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+  }
+
+  .admin-main {
+    padding: $spacing-lg;
+    background-color: $bg-color;
+    overflow-y: auto;
+  }
+}
