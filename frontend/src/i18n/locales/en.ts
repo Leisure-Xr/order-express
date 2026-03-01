@@ -49,6 +49,8 @@ export default {
     shopSettings: 'Shop Settings',
     notFound: 'Page Not Found',
     profile: 'Me',
+    userAgreement: 'User Agreement',
+    privacyPolicy: 'Privacy Policy',
   },
 
   auth: {
@@ -229,10 +231,25 @@ export default {
     totalOrders: 'Total Orders',
     totalSpent: 'Total Spent',
     myOrders: 'My Orders',
+    allOrders: 'All Orders',
+    toPay: 'To Pay',
+    toShip: 'To Ship',
+    toReceive: 'To Receive',
+    afterSales: 'Refund / Support',
     privacy: 'Privacy Settings',
+    userAgreement: 'User Agreement',
+    privacyPolicy: 'Privacy Policy',
     account: 'Account',
     language: 'Language',
     clearTable: 'Clear Table',
     storeName: 'Store',
+    logout: 'Log Out',
+    logoutConfirm: 'Log out now?',
+  },
+
+  legal: {
+    placeholderTitle: 'Coming soon',
+    userAgreementPlaceholder: 'User Agreement content will be shown here. Replace this with your official text.',
+    privacyPolicyPlaceholder: 'Privacy Policy content will be shown here. Replace this with your official text.',
   },
 }

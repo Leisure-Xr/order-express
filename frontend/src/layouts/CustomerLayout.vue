@@ -1,9 +1,11 @@
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n'
 import { useRoute, useRouter } from 'vue-router'
-import { computed } from 'vue'
+import { computed, onMounted } from 'vue'
 import { useAppStore } from '@/stores/app'
 import { useCartStore } from '@/stores/cart'
+import { useSettingsStore } from '@/stores/settings'
+import { useLocaleText } from '@/composables/useLocaleText'
 import {
   HomeFilled,
   Food,
@@ -16,6 +18,19 @@ const route = useRoute()
 const router = useRouter()
 const appStore = useAppStore()
 const cartStore = useCartStore()
+const settingsStore = useSettingsStore()
+const { localText } = useLocaleText()
+
+const storeName = computed(() => {
+  const name = settingsStore.storeInfo ? localText(settingsStore.storeInfo.name) : ''
+  return name || 'Order Express'
+})
+
+onMounted(() => {
+  if (!settingsStore.storeInfo) {
+    settingsStore.fetchStoreInfo().catch(() => {})
+  }
+})
 
 const tabs = computed(() => [
   { path: '/', icon: HomeFilled, label: t('routes.home') },
@@ -47,7 +62,7 @@ const tableDisplay = computed(() => {
   <div class="customer-layout">
     <header class="customer-header">
       <div class="customer-header-inner">
-        <div class="header-store-name">Order Express</div>
+        <div class="header-store-name">{{ storeName }}</div>
         <div class="header-actions">
           <el-tag v-if="tableDisplay" type="warning" size="small" effect="dark">
             {{ t('order.tableNumber') }}: {{ tableDisplay }}
@@ -129,6 +144,10 @@ const tableDisplay = computed(() => {
   -webkit-text-fill-color: transparent;
   background-clip: text;
   letter-spacing: 0.5px;
+  max-width: 65%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .header-actions {

@@ -49,6 +49,8 @@ export default {
     shopSettings: '店铺设置',
     notFound: '页面不存在',
     profile: '我的',
+    userAgreement: '用户协议',
+    privacyPolicy: '隐私政策',
   },
 
   auth: {
@@ -229,10 +231,25 @@ export default {
     totalOrders: '历史订单',
     totalSpent: '累计消费',
     myOrders: '我的订单',
+    allOrders: '全部订单',
+    toPay: '待付款',
+    toShip: '待发货',
+    toReceive: '待收货',
+    afterSales: '退款/售后',
     privacy: '隐私设置',
+    userAgreement: '用户协议',
+    privacyPolicy: '隐私政策',
     account: '账号管理',
     language: '语言',
     clearTable: '清除桌号',
     storeName: '店铺',
+    logout: '退出登录',
+    logoutConfirm: '确认退出登录？',
+  },
+
+  legal: {
+    placeholderTitle: '内容待补充',
+    userAgreementPlaceholder: '这里将展示用户协议内容。请根据实际业务替换为正式文本。',
+    privacyPolicyPlaceholder: '这里将展示隐私政策内容。请根据实际业务替换为正式文本。',
   },
 }

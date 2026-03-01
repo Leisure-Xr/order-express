@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import { onMounted, ref } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { useRouter } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import { useCartStore } from '@/stores/cart'
 import { useMenuStore } from '@/stores/menu'
@@ -13,6 +13,7 @@ import type { Order, OrderStatus } from '@/types'
 import EmptyState from '@/components/common/EmptyState.vue'
 
 const { t } = useI18n()
+const route = useRoute()
 const router = useRouter()
 const cartStore = useCartStore()
 const menuStore = useMenuStore()
@@ -21,6 +22,51 @@ const { localText } = useLocaleText()
 const loading = ref(false)
 
 const orders = ref<Order[]>([])
+
+type OrderQuickFilter = 'all' | 'unpaid' | 'to_ship' | 'to_receive' | 'after_sales'
+
+const activeFilter = computed<OrderQuickFilter>(() => {
+  const value = route.query.filter
+  if (typeof value !== 'string') return 'all'
+  if (value === 'unpaid' || value === 'to_ship' || value === 'to_receive' || value === 'after_sales') {
+    return value
+  }
+  return 'all'
+})
+
+const filterOptions = computed(() => [
+  { label: t('common.all'), value: 'all' },
+  { label: t('profile.toPay'), value: 'unpaid' },
+  { label: t('profile.toShip'), value: 'to_ship' },
+  { label: t('profile.toReceive'), value: 'to_receive' },
+  { label: t('profile.afterSales'), value: 'after_sales' },
+])
+
+function setFilter(next: string | number) {
+  const value = next as OrderQuickFilter
+  if (value === activeFilter.value) return
+
+  const query = { ...route.query }
+  delete query.filter
+
+  router.replace({
+    name: 'CustomerOrderHistory',
+    query: value === 'all' ? query : { ...query, filter: value },
+  })
+}
+
+function matchesFilter(order: Order, filter: Exclude<OrderQuickFilter, 'all'>): boolean {
+  if (filter === 'unpaid') return order.payment.status === 'unpaid'
+  if (filter === 'to_ship') return order.status === 'confirmed' || order.status === 'preparing' || order.status === 'ready'
+  if (filter === 'to_receive') return order.status === 'delivered'
+  return order.payment.status === 'refunded' || order.status === 'cancelled'
+}
+
+const displayOrders = computed(() => {
+  const filter = activeFilter.value
+  if (filter === 'all') return orders.value
+  return orders.value.filter((o) => matchesFilter(o, filter))
+})
 
 function statusTagType(status: OrderStatus): 'info' | 'success' | 'warning' | 'danger' {
   if (status === 'pending') return 'warning'
@@ -84,12 +130,20 @@ async function reorder(order: Order) {
   <div class="orders-page">
     <div class="title">{{ t('routes.orderHistory') }}</div>
 
+    <div class="filters">
+      <el-segmented
+        :model-value="activeFilter"
+        :options="filterOptions"
+        @change="setFilter"
+      />
+    </div>
+
     <el-skeleton v-if="loading && !orders.length" :rows="8" animated />
 
-    <EmptyState v-else-if="!orders.length" :title="t('common.noData')" />
+    <EmptyState v-else-if="!displayOrders.length" :title="t('common.noData')" />
 
     <div v-else class="list">
-      <el-card v-for="o in orders" :key="o.id" shadow="never" class="order-card">
+      <el-card v-for="o in displayOrders" :key="o.id" shadow="never" class="order-card">
         <div class="top">
           <div class="order-no">{{ o.orderNumber }}</div>
           <el-tag :type="statusTagType(o.status)">{{ t(`order.status.${o.status}`) }}</el-tag>
@@ -141,6 +195,10 @@ async function reorder(order: Order) {
   font-size: 18px;
   font-weight: 900;
   color: #303133;
+  margin-bottom: 12px;
+}
+
+.filters {
   margin-bottom: 12px;
 }
 

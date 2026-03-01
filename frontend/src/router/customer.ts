@@ -39,6 +39,18 @@ export const customerRoutes: RouteRecordRaw[] = [
     meta: { title: 'routes.profile', layout: 'customer' },
   },
   {
+    path: '/legal/user-agreement',
+    name: 'CustomerUserAgreement',
+    component: () => import('@/views/customer/UserAgreementView.vue'),
+    meta: { title: 'routes.userAgreement', layout: 'blank', showBack: true },
+  },
+  {
+    path: '/legal/privacy-policy',
+    name: 'CustomerPrivacyPolicy',
+    component: () => import('@/views/customer/PrivacyPolicyView.vue'),
+    meta: { title: 'routes.privacyPolicy', layout: 'blank', showBack: true },
+  },
+  {
     path: '/checkout',
     name: 'CustomerCheckout',
     component: () => import('@/views/customer/CheckoutView.vue'),

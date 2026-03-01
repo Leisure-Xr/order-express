@@ -1,56 +1,40 @@
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue'
+import { computed, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRouter } from 'vue-router'
+import { ElMessage, ElMessageBox } from 'element-plus'
 import { useAppStore } from '@/stores/app'
+import { useAuthStore } from '@/stores/auth'
 import { useSettingsStore } from '@/stores/settings'
 import { useLocaleText } from '@/composables/useLocaleText'
-import { getOrderHistoryIds } from '@/utils/orderHistory'
-import { getOrderByIdApi } from '@/api/order'
 import {
+  Box,
+  CreditCard,
   Document,
+  Grid,
   Lock,
-  UserFilled,
+  Service,
+  Shop,
+  Switch,
+  SwitchButton,
+  Van,
   ArrowRight,
 } from '@element-plus/icons-vue'
 
 const { t } = useI18n()
 const router = useRouter()
 const appStore = useAppStore()
+const authStore = useAuthStore()
 const settingsStore = useSettingsStore()
 const { localText } = useLocaleText()
 
-const orderCount = ref(0)
-const totalSpent = ref(0)
-const loading = ref(false)
-
 onMounted(async () => {
-  loading.value = true
   try {
-    const ids = getOrderHistoryIds()
-    orderCount.value = ids.length
-
     if (!settingsStore.storeInfo) {
       await settingsStore.fetchStoreInfo()
     }
-
-    if (ids.length > 0) {
-      const results = await Promise.all(
-        ids.slice(0, 20).map(async (id) => {
-          try {
-            const res = await getOrderByIdApi(id)
-            return res.code === 200 && res.data ? res.data.total : 0
-          } catch {
-            return 0
-          }
-        }),
-      )
-      totalSpent.value = results.reduce((sum, v) => sum + v, 0)
-    }
   } catch {
     // Silently fail — profile is informational
-  } finally {
-    loading.value = false
   }
 })
 
@@ -67,171 +51,245 @@ function clearTable() {
   appStore.setTableFromQuery(null)
 }
 
-function goOrders() {
-  router.push({ name: 'CustomerOrderHistory' })
+type OrderQuickFilter = 'unpaid' | 'to_ship' | 'to_receive' | 'after_sales'
+
+function goOrders(filter?: 'all' | OrderQuickFilter) {
+  router.push({
+    name: 'CustomerOrderHistory',
+    query: filter && filter !== 'all' ? { filter } : undefined,
+  })
+}
+
+function goUserAgreement() {
+  router.push({ name: 'CustomerUserAgreement' })
+}
+
+function goPrivacyPolicy() {
+  router.push({ name: 'CustomerPrivacyPolicy' })
+}
+
+async function confirmLogout() {
+  try {
+    await ElMessageBox.confirm(t('profile.logoutConfirm'), t('profile.logout'), {
+      type: 'warning',
+      confirmButtonText: t('common.confirm'),
+      cancelButtonText: t('common.cancel'),
+    })
+  } catch {
+    return
+  }
+
+  await authStore.logout()
+  ElMessage.success(t('common.success'))
+  router.push({ name: 'CustomerHome' })
 }
 </script>
 
 <template>
   <div class="profile-page">
-    <div class="title">{{ t('profile.title') }}</div>
-
-    <el-skeleton v-if="loading" :rows="6" animated />
-
-    <template v-else>
-      <el-card shadow="never" class="section-card">
-        <div class="summary-row">
-          <div class="summary-item">
-            <div class="summary-value">{{ orderCount }}</div>
-            <div class="summary-label">{{ t('profile.totalOrders') }}</div>
-          </div>
-          <div class="summary-divider" />
-          <div class="summary-item">
-            <div class="summary-value">&yen;{{ totalSpent.toFixed(0) }}</div>
-            <div class="summary-label">{{ t('profile.totalSpent') }}</div>
-          </div>
+    <el-card shadow="never" class="section-card orders-card">
+      <div class="section-header">
+        <div class="section-title">{{ t('profile.myOrders') }}</div>
+        <div class="section-link" @click="goOrders('all')">
+          <span>{{ t('profile.allOrders') }}</span>
+          <el-icon :size="16"><ArrowRight /></el-icon>
         </div>
-      </el-card>
+      </div>
 
-      <el-card shadow="never" class="section-card menu-card">
-        <div class="menu-item" @click="goOrders">
-          <div class="menu-left">
-            <div class="menu-icon" style="background: rgba(231, 76, 60, 0.10); color: #e74c3c">
-              <el-icon :size="18"><Document /></el-icon>
-            </div>
-            <span class="menu-label">{{ t('profile.myOrders') }}</span>
-          </div>
-          <el-icon class="menu-arrow" :size="16"><ArrowRight /></el-icon>
+      <div class="order-shortcuts">
+        <div class="shortcut" @click="goOrders('unpaid')">
+          <el-icon class="shortcut-icon" :size="26"><CreditCard /></el-icon>
+          <div class="shortcut-label">{{ t('profile.toPay') }}</div>
         </div>
-
-        <div class="menu-divider" />
-
-        <div class="menu-item">
-          <div class="menu-left">
-            <div class="menu-icon" style="background: rgba(52, 152, 219, 0.10); color: #3498db">
-              <el-icon :size="18"><Lock /></el-icon>
-            </div>
-            <span class="menu-label">{{ t('profile.privacy') }}</span>
-          </div>
-          <el-icon class="menu-arrow" :size="16"><ArrowRight /></el-icon>
+        <div class="shortcut" @click="goOrders('to_ship')">
+          <el-icon class="shortcut-icon" :size="26"><Box /></el-icon>
+          <div class="shortcut-label">{{ t('profile.toShip') }}</div>
         </div>
-
-        <div class="menu-divider" />
-
-        <div class="menu-item">
-          <div class="menu-left">
-            <div class="menu-icon" style="background: rgba(243, 156, 18, 0.10); color: #f39c12">
-              <el-icon :size="18"><UserFilled /></el-icon>
-            </div>
-            <span class="menu-label">{{ t('profile.account') }}</span>
-          </div>
-          <el-icon class="menu-arrow" :size="16"><ArrowRight /></el-icon>
+        <div class="shortcut" @click="goOrders('to_receive')">
+          <el-icon class="shortcut-icon" :size="26"><Van /></el-icon>
+          <div class="shortcut-label">{{ t('profile.toReceive') }}</div>
         </div>
-      </el-card>
+        <div class="shortcut" @click="goOrders('after_sales')">
+          <el-icon class="shortcut-icon" :size="26"><Service /></el-icon>
+          <div class="shortcut-label">{{ t('profile.afterSales') }}</div>
+        </div>
+      </div>
+    </el-card>
 
-      <el-card v-if="appStore.currentTableId" shadow="never" class="section-card">
-        <div class="setting-row">
-          <span class="setting-label">{{ t('order.tableNumber') }}</span>
-          <div class="setting-actions">
+    <el-card shadow="never" class="section-card list-card">
+      <div class="section-title">{{ t('profile.privacy') }}</div>
+
+      <div class="cell cell-clickable" @click="goUserAgreement">
+        <div class="cell-left">
+          <el-icon class="cell-icon" :size="20"><Document /></el-icon>
+          <span class="cell-label">{{ t('profile.userAgreement') }}</span>
+        </div>
+        <el-icon class="cell-arrow" :size="16"><ArrowRight /></el-icon>
+      </div>
+
+      <div class="cell-divider" />
+
+      <div class="cell cell-clickable" @click="goPrivacyPolicy">
+        <div class="cell-left">
+          <el-icon class="cell-icon" :size="20"><Lock /></el-icon>
+          <span class="cell-label">{{ t('profile.privacyPolicy') }}</span>
+        </div>
+        <el-icon class="cell-arrow" :size="16"><ArrowRight /></el-icon>
+      </div>
+    </el-card>
+
+    <el-card shadow="never" class="section-card list-card">
+      <div class="section-title">{{ t('profile.account') }}</div>
+
+      <div class="cell">
+        <div class="cell-left">
+          <el-icon class="cell-icon" :size="20"><Switch /></el-icon>
+          <span class="cell-label">{{ t('profile.language') }}</span>
+        </div>
+        <div class="cell-right">
+          <el-segmented
+            :model-value="appStore.locale"
+            :options="[
+              { label: '中文', value: 'zh-CN' },
+              { label: 'English', value: 'en' },
+            ]"
+            @change="switchLocale"
+          />
+        </div>
+      </div>
+
+      <template v-if="appStore.currentTableId">
+        <div class="cell-divider" />
+        <div class="cell">
+          <div class="cell-left">
+            <el-icon class="cell-icon" :size="20"><Grid /></el-icon>
+            <span class="cell-label">{{ t('order.tableNumber') }}</span>
+          </div>
+          <div class="cell-right">
             <el-tag type="warning" effect="dark">{{ appStore.currentTableId }}</el-tag>
             <el-button size="small" text type="danger" @click="clearTable">
               {{ t('profile.clearTable') }}
             </el-button>
           </div>
         </div>
-      </el-card>
+      </template>
 
-      <el-card shadow="never" class="section-card">
-        <div class="setting-row">
-          <span class="setting-label">{{ t('profile.language') }}</span>
-          <div class="setting-actions">
-            <el-segmented
-              :model-value="appStore.locale"
-              :options="[
-                { label: '中文', value: 'zh-CN' },
-                { label: 'English', value: 'en' },
-              ]"
-              @change="switchLocale"
-            />
+      <div class="cell-divider" />
+
+      <div class="cell">
+        <div class="cell-left">
+          <el-icon class="cell-icon" :size="20"><Shop /></el-icon>
+          <span class="cell-label">{{ t('profile.storeName') }}</span>
+        </div>
+        <div class="cell-right">
+          <span class="cell-value">{{ storeName }}</span>
+        </div>
+      </div>
+
+      <template v-if="authStore.isAuthenticated">
+        <div class="cell-divider" />
+        <div class="cell cell-clickable logout-row" @click="confirmLogout">
+          <div class="cell-left">
+            <el-icon class="cell-icon" :size="20"><SwitchButton /></el-icon>
+            <span class="cell-label">{{ t('profile.logout') }}</span>
           </div>
+          <el-icon class="cell-arrow" :size="16"><ArrowRight /></el-icon>
         </div>
-      </el-card>
-
-      <el-card shadow="never" class="section-card">
-        <div class="setting-row">
-          <span class="setting-label">{{ t('profile.storeName') }}</span>
-          <span class="setting-text">{{ storeName }}</span>
-        </div>
-      </el-card>
-    </template>
+      </template>
+    </el-card>
   </div>
 </template>
 
 <style scoped lang="scss">
 .profile-page {
   padding: 12px;
-}
-
-.title {
-  font-size: 18px;
-  font-weight: 900;
-  color: #303133;
-  margin-bottom: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
 }
 
 .section-card {
   border-radius: 14px;
   border: 1px solid rgba(0, 0, 0, 0.03);
-  margin-bottom: 12px;
-}
-
-.summary-row {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0;
-}
-
-.summary-item {
-  flex: 1;
-  text-align: center;
-  padding: 8px 0;
-}
-
-.summary-value {
-  font-size: 24px;
-  font-weight: 900;
-  background: linear-gradient(135deg, #e74c3c, #f0574a);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-}
-
-.summary-label {
-  margin-top: 4px;
-  font-size: 12px;
-  color: #909399;
-}
-
-.summary-divider {
-  width: 1px;
-  height: 40px;
-  background: rgba(0, 0, 0, 0.06);
-  flex: none;
-}
-
-.menu-card {
   :deep(.el-card__body) {
-    padding: 4px 16px;
+    padding: 14px 16px;
   }
 }
 
-.menu-item {
+.section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-bottom: 10px;
+}
+
+.section-title {
+  font-size: 18px;
+  font-weight: 900;
+  color: #303133;
+}
+
+.section-link {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  color: #c0c4cc;
+  font-size: 14px;
+  cursor: pointer;
+  user-select: none;
+
+  &:active {
+    opacity: 0.6;
+  }
+}
+
+.order-shortcuts {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 6px;
+}
+
+.shortcut {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 12px 0;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: opacity var(--app-transition-fast), background var(--app-transition-fast);
+
+  &:active {
+    opacity: 0.6;
+  }
+}
+
+.shortcut-icon {
+  color: #111827;
+}
+
+.shortcut-label {
+  margin-top: 8px;
+  font-size: 13px;
+  color: #303133;
+}
+
+.list-card {
+  .section-title {
+    padding-bottom: 6px;
+  }
+}
+
+.cell {
   display: flex;
   align-items: center;
   justify-content: space-between;
   padding: 14px 0;
+}
+
+.cell-clickable {
   cursor: pointer;
+  user-select: none;
   transition: opacity var(--app-transition-fast);
 
   &:active {
@@ -239,57 +297,45 @@ function goOrders() {
   }
 }
 
-.menu-left {
+.cell-left {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
 }
 
-.menu-icon {
-  width: 36px;
-  height: 36px;
-  border-radius: 10px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex: none;
-}
-
-.menu-label {
-  font-size: 15px;
-  font-weight: 600;
-  color: #303133;
-}
-
-.menu-arrow {
-  color: #c0c4cc;
-}
-
-.menu-divider {
-  height: 1px;
-  background: rgba(0, 0, 0, 0.04);
-}
-
-.setting-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-
-.setting-label {
-  font-weight: 600;
-  color: #303133;
-  font-size: 14px;
-}
-
-.setting-actions {
+.cell-right {
   display: flex;
   align-items: center;
   gap: 8px;
 }
 
-.setting-text {
+.cell-icon {
+  color: #111827;
+}
+
+.cell-label {
+  font-size: 15px;
+  color: #303133;
+  font-weight: 600;
+}
+
+.cell-value {
   color: #909399;
   font-size: 14px;
+}
+
+.cell-arrow {
+  color: #c0c4cc;
+}
+
+.cell-divider {
+  height: 1px;
+  background: rgba(0, 0, 0, 0.06);
+}
+
+.logout-row {
+  .cell-label {
+    color: #f56c6c;
+  }
 }
 </style>
