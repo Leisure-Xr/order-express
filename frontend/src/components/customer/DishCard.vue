@@ -35,7 +35,9 @@ function handleAdd(e: MouseEvent) {
 
 <template>
   <div class="dish-card" :class="{ disabled }" @click="handleClick">
-    <img class="dish-image" :src="dish.image" :alt="localText(dish.name)" />
+    <div class="dish-image-wrap">
+      <img class="dish-image" :src="dish.image" :alt="localText(dish.name)" />
+    </div>
     <div class="dish-body">
       <div class="dish-title">{{ localText(dish.name) }}</div>
       <div class="dish-desc">{{ localText(dish.description) }}</div>
@@ -66,20 +68,50 @@ function handleAdd(e: MouseEvent) {
   cursor: pointer;
   user-select: none;
   -webkit-tap-highlight-color: transparent;
+  transition: transform var(--app-transition-base),
+              box-shadow var(--app-transition-base);
+
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.10);
+  }
+
+  &:active {
+    transform: translateY(0) scale(0.98);
+    transition-duration: 0.1s;
+  }
 }
 
 .dish-card.disabled {
   opacity: 0.6;
   cursor: not-allowed;
+
+  &:hover {
+    transform: none;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
+  }
+}
+
+.dish-image-wrap {
+  width: 88px;
+  height: 88px;
+  border-radius: 10px;
+  overflow: hidden;
+  flex: none;
 }
 
 .dish-image {
-  width: 88px;
-  height: 88px;
+  width: 100%;
+  height: 100%;
   object-fit: cover;
-  border-radius: 10px;
-  background: #f2f2f2;
-  flex: none;
+  background: linear-gradient(110deg, #f0f0f0 30%, #fafafa 50%, #f0f0f0 70%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite linear;
+  transition: transform 0.3s ease;
+
+  .dish-card:hover & {
+    transform: scale(1.05);
+  }
 }
 
 .dish-body {

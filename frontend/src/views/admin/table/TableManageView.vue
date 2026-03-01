@@ -6,6 +6,7 @@ import { Plus } from '@element-plus/icons-vue'
 import { useTableStore } from '@/stores/table'
 import TableCard from '@/components/admin/TableCard.vue'
 import QRCodeDialog from '@/components/admin/QRCodeDialog.vue'
+import AdminPageHeader from '@/components/admin/AdminPageHeader.vue'
 import type { Table } from '@/types'
 
 const { t } = useI18n()
@@ -114,15 +115,20 @@ function openQr(table: Table) {
 </script>
 
 <template>
-  <div class="table-manage">
-    <div class="toolbar">
-      <div class="title">{{ t('routes.tableManagement') }}</div>
-      <el-button type="primary" :icon="Plus" @click="openCreate">
-        {{ t('table.addTable') }}
-      </el-button>
-    </div>
+  <div class="table-manage admin-page">
+    <AdminPageHeader :title="t('routes.tableManagement')">
+      <template #actions>
+        <el-button type="primary" :icon="Plus" @click="openCreate">
+          {{ t('table.addTable') }}
+        </el-button>
+      </template>
+    </AdminPageHeader>
 
     <el-skeleton v-if="tableStore.loading && !tableStore.tables.length" :rows="8" animated />
+
+    <el-empty v-else-if="!tableStore.tables.length" :description="t('common.noData')">
+      <el-button type="primary" :icon="Plus" @click="openCreate">{{ t('table.addTable') }}</el-button>
+    </el-empty>
 
     <div v-else class="areas">
       <div v-for="g in areaGroups" :key="g.area" class="area">
@@ -173,19 +179,6 @@ function openQr(table: Table) {
 </template>
 
 <style scoped lang="scss">
-.toolbar {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 16px;
-}
-
-.title {
-  font-size: 18px;
-  font-weight: 800;
-  color: #303133;
-}
-
 .areas {
   display: flex;
   flex-direction: column;
@@ -223,4 +216,3 @@ function openQr(table: Table) {
   }
 }
 </style>
-

@@ -60,11 +60,28 @@ function selectCategory(categoryId: string) {
   white-space: nowrap;
   cursor: pointer;
   user-select: none;
+  border: 1.5px solid transparent;
+  transition: background var(--app-transition-base),
+              color var(--app-transition-base),
+              transform var(--app-transition-fast),
+              box-shadow var(--app-transition-base),
+              border-color var(--app-transition-base);
+
+  &:hover:not(.active) {
+    background: #f7f8fb;
+    border-color: rgba(0, 0, 0, 0.04);
+  }
 
   &.active {
-    background: rgba(231, 76, 60, 0.12);
+    background: linear-gradient(135deg, rgba(231, 76, 60, 0.12), rgba(243, 156, 18, 0.06));
     color: #e74c3c;
-    font-weight: 600;
+    font-weight: 700;
+    border-color: rgba(231, 76, 60, 0.18);
+    box-shadow: 0 2px 8px rgba(231, 76, 60, 0.12);
+  }
+
+  &:active {
+    transform: scale(0.95);
   }
 }
 

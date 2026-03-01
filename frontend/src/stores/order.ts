@@ -6,6 +6,8 @@ import type {
   CreateOrderPayload,
   OrderStatus,
   PaginatedResult,
+  OrderStats,
+  StatsQueryParams,
 } from '@/types'
 import {
   getOrdersApi,
@@ -13,6 +15,7 @@ import {
   createOrderApi,
   updateOrderStatusApi,
   getOrderHistoryApi,
+  getOrderStatsApi,
 } from '@/api/order'
 import { addOrderIdToHistory } from '@/utils/orderHistory'
 
@@ -32,6 +35,9 @@ export const useOrderStore = defineStore('order', () => {
   const listLoading = ref(false)
   const detailLoading = ref(false)
   const historyLoading = ref(false)
+  const statsLoading = ref(false)
+
+  const orderStats = ref<OrderStats | null>(null)
 
   async function fetchOrders(params?: OrderQueryParams): Promise<PaginatedResult<Order>> {
     listLoading.value = true
@@ -98,6 +104,18 @@ export const useOrderStore = defineStore('order', () => {
     }
   }
 
+  async function fetchOrderStats(params?: StatsQueryParams): Promise<OrderStats | null> {
+    statsLoading.value = true
+    try {
+      const res = await getOrderStatsApi(params)
+      assertOk(res.code, res.message)
+      orderStats.value = res.data ?? null
+      return orderStats.value
+    } finally {
+      statsLoading.value = false
+    }
+  }
+
   return {
     // State
     orders,
@@ -106,14 +124,17 @@ export const useOrderStore = defineStore('order', () => {
     pageSize,
     currentOrder,
     orderHistory,
+    orderStats,
     listLoading,
     detailLoading,
     historyLoading,
+    statsLoading,
     // Actions
     fetchOrders,
     fetchOrderById,
     createOrder,
     updateOrderStatus,
     fetchOrderHistory,
+    fetchOrderStats,
   }
 })

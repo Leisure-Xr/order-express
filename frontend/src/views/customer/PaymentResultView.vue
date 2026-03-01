@@ -50,9 +50,11 @@ function backToMenu() {
     <div v-else-if="!order" class="empty">{{ t('common.noData') }}</div>
 
     <div v-else class="content">
-      <el-icon :size="86" color="#2ecc71">
-        <CircleCheckFilled />
-      </el-icon>
+      <div class="icon-wrap">
+        <el-icon :size="86" color="#2ecc71">
+          <CircleCheckFilled />
+        </el-icon>
+      </div>
 
       <div class="title">{{ t('payment.success') }}</div>
 
@@ -90,16 +92,33 @@ function backToMenu() {
   text-align: center;
 }
 
+.icon-wrap {
+  position: relative;
+  animation: successBounce 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+
+  &::before {
+    content: '';
+    position: absolute;
+    inset: -20px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(46, 204, 113, 0.12) 0%, transparent 70%);
+    pointer-events: none;
+  }
+}
+
 .title {
-  font-size: 20px;
+  font-size: 22px;
   font-weight: 900;
   color: #303133;
+  animation: fadeSlideUp 0.4s cubic-bezier(0.4, 0, 0.2, 1) 0.2s both;
 }
 
 .card {
   width: 100%;
   max-width: 460px;
-  border-radius: 12px;
+  border-radius: 16px;
+  border: 1px solid rgba(0, 0, 0, 0.03);
+  animation: fadeSlideUp 0.4s cubic-bezier(0.4, 0, 0.2, 1) 0.3s both;
 }
 
 .row {
@@ -119,6 +138,7 @@ function backToMenu() {
   max-width: 460px;
   display: flex;
   gap: 12px;
+  animation: fadeSlideUp 0.4s cubic-bezier(0.4, 0, 0.2, 1) 0.4s both;
 }
 
 .btns :deep(.el-button) {

@@ -1,8 +1,11 @@
 <script setup lang="ts">
+import { computed, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRoute, useRouter } from 'vue-router'
 import { useAppStore } from '@/stores/app'
 import { useAuthStore } from '@/stores/auth'
+import { useSettingsStore } from '@/stores/settings'
+import { useLocaleText } from '@/composables/useLocaleText'
 import LangSwitcher from '@/components/common/LangSwitcher.vue'
 import {
   DataAnalysis,
@@ -19,6 +22,33 @@ const route = useRoute()
 const router = useRouter()
 const appStore = useAppStore()
 const authStore = useAuthStore()
+const settingsStore = useSettingsStore()
+const { localText } = useLocaleText()
+
+const storeName = computed(() => {
+  const name = settingsStore.storeInfo ? localText(settingsStore.storeInfo.name) : ''
+  return name || 'Order Express'
+})
+
+const storeLogo = computed(() => settingsStore.storeInfo?.logo || '')
+
+function storeInitials(name: string): string {
+  const trimmed = name.trim()
+  if (!trimmed) return 'OE'
+  const parts = trimmed.split(/\s+/).filter(Boolean)
+  if (parts.length >= 2) {
+    return `${parts[0]?.[0] ?? ''}${parts[1]?.[0] ?? ''}`.toUpperCase()
+  }
+  return trimmed.slice(0, 2).toUpperCase()
+}
+
+const storeMiniText = computed(() => storeInitials(storeName.value))
+
+onMounted(() => {
+  if (!settingsStore.storeInfo) {
+    settingsStore.fetchStoreInfo().catch(() => {})
+  }
+})
 
 function handleCommand(command: string) {
   if (command === 'logout') {
@@ -32,8 +62,11 @@ function handleCommand(command: string) {
   <el-container class="admin-layout">
     <el-aside :width="appStore.sidebarCollapsed ? '64px' : '220px'" class="admin-sidebar">
       <div class="logo-container">
-        <span v-if="!appStore.sidebarCollapsed" class="logo-text">Order Express</span>
-        <span v-else class="logo-text-mini">OE</span>
+        <div class="logo-inner">
+          <el-avatar v-if="storeLogo" :size="32" :src="storeLogo" class="logo-avatar" />
+          <span v-if="!appStore.sidebarCollapsed" class="logo-text">{{ storeName }}</span>
+          <span v-else-if="!storeLogo" class="logo-text-mini">{{ storeMiniText }}</span>
+        </div>
       </div>
       <el-menu
         :default-active="route.path"
@@ -110,6 +143,20 @@ function handleCommand(command: string) {
   background: linear-gradient(180deg, #0b1220 0%, #111827 40%, #1f2937 100%);
   transition: width 0.3s ease;
   overflow: hidden;
+  position: relative;
+
+  &::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 200px;
+    height: 200px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(231, 76, 60, 0.08) 0%, transparent 70%);
+    pointer-events: none;
+  }
 
   .logo-container {
     height: 60px;
@@ -119,18 +166,42 @@ function handleCommand(command: string) {
     border-bottom: 1px solid rgba(255, 255, 255, 0.08);
   }
 
+  .logo-inner {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    padding: 0 10px;
+    min-width: 0;
+  }
+
+  .logo-avatar {
+    border: 1px solid rgba(255, 255, 255, 0.22);
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.14);
+    flex: none;
+    background: rgba(255, 255, 255, 0.10);
+  }
+
   .logo-text {
-    color: #ffffff;
     font-size: 20px;
-    font-weight: 700;
+    font-weight: 800;
     white-space: nowrap;
     letter-spacing: 1px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    background: linear-gradient(135deg, #ffffff, #e74c3c);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
   }
 
   .logo-text-mini {
-    color: #ffffff;
     font-size: 20px;
-    font-weight: 700;
+    font-weight: 800;
+    background: linear-gradient(135deg, #ffffff, #e74c3c);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
   }
 
   :deep(.el-menu) {
@@ -161,7 +232,7 @@ function handleCommand(command: string) {
     bottom: 8px;
     width: 3px;
     border-radius: 999px;
-    background: #e74c3c;
+    background: linear-gradient(180deg, #e74c3c, #f0574a);
   }
 
   :deep(.el-sub-menu.is-active > .el-sub-menu__title) {
@@ -191,10 +262,13 @@ function handleCommand(command: string) {
   .collapse-btn {
     cursor: pointer;
     color: #606266;
-    transition: color 0.2s;
+    padding: 6px;
+    border-radius: 8px;
+    transition: color 0.2s, background 0.2s;
 
     &:hover {
       color: #e74c3c;
+      background: rgba(231, 76, 60, 0.06);
     }
   }
 }

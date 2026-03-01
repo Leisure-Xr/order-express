@@ -156,6 +156,11 @@ func (h *DishHandler) Create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if body.Price <= 0 {
+		BadRequest(w, "price must be greater than 0")
+		return
+	}
+
 	now := time.Now().UTC().Format(time.RFC3339)
 	id, err := idgen.New("dish-", 8)
 	if err != nil {
@@ -280,6 +285,11 @@ func (h *DishHandler) Update(w http.ResponseWriter, r *http.Request) {
 	}
 	if catCount == 0 {
 		BadRequest(w, "category not found")
+		return
+	}
+
+	if existing.Price <= 0 {
+		BadRequest(w, "price must be greater than 0")
 		return
 	}
 

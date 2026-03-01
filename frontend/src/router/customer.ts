@@ -33,6 +33,12 @@ export const customerRoutes: RouteRecordRaw[] = [
     meta: { title: 'routes.orderHistory', layout: 'customer' },
   },
   {
+    path: '/profile',
+    name: 'CustomerProfile',
+    component: () => import('@/views/customer/ProfileView.vue'),
+    meta: { title: 'routes.profile', layout: 'customer' },
+  },
+  {
     path: '/checkout',
     name: 'CustomerCheckout',
     component: () => import('@/views/customer/CheckoutView.vue'),

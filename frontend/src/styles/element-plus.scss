@@ -58,3 +58,41 @@
   font-weight: 700;
 }
 
+// Primary buttons: gradient and glow
+.el-button--primary:not(.is-text):not(.is-link):not(.is-plain) {
+  background: var(--app-gradient-primary);
+  border: none;
+  transition: box-shadow 0.25s cubic-bezier(0.4, 0, 0.2, 1),
+              transform 0.15s ease;
+
+  &:hover,
+  &:focus {
+    background: var(--app-gradient-primary);
+    box-shadow: 0 4px 14px rgba(231, 76, 60, 0.30);
+  }
+
+  &:active {
+    transform: scale(0.97);
+  }
+}
+
+// Cards: transition for hover
+.el-card {
+  transition: box-shadow 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+// Dialog: smoother animation
+.el-overlay {
+  transition: opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+// Message: rounded with better shadow
+.el-message {
+  border-radius: 12px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+}
+
+.el-message-box {
+  border-radius: 16px;
+}
+

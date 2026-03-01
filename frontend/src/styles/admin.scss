@@ -1,31 +1,23 @@
 @use './variables' as *;
 
-.admin-layout {
-  height: 100vh;
+.admin-page {
+  width: 100%;
+  max-width: 1400px;
+  margin: 0 auto;
+}
 
-  .admin-sidebar {
-    background-color: $bg-dark;
-    transition: width 0.3s;
+.admin-muted {
+  color: $text-light;
+}
 
-    .el-menu {
-      border-right: none;
-      background-color: $bg-dark;
-    }
-  }
+.admin-table-scroll {
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
 
-  .admin-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 0 $spacing-lg;
-    height: 60px;
-    background: $bg-white;
-    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
-  }
-
-  .admin-main {
-    padding: $spacing-lg;
-    background-color: $bg-color;
-    overflow-y: auto;
+@media (max-width: 900px) {
+  .admin-table-scroll .el-table {
+    min-width: 960px;
   }
 }

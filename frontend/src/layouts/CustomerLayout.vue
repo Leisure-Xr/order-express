@@ -8,7 +8,7 @@ import {
   HomeFilled,
   Food,
   ShoppingCart,
-  Document,
+  User,
 } from '@element-plus/icons-vue'
 
 const { t } = useI18n()
@@ -21,7 +21,7 @@ const tabs = computed(() => [
   { path: '/', icon: HomeFilled, label: t('routes.home') },
   { path: '/menu', icon: Food, label: t('routes.menu') },
   { path: '/cart', icon: ShoppingCart, label: t('routes.cart'), badge: cartStore.itemCount },
-  { path: '/orders', icon: Document, label: t('routes.orderHistory') },
+  { path: '/profile', icon: User, label: t('routes.profile') },
 ])
 
 function isActive(tabPath: string): boolean {
@@ -105,8 +105,8 @@ const tableDisplay = computed(() => {
   position: sticky;
   top: 0;
   z-index: 100;
-  background: rgba(255, 255, 255, 0.92);
-  backdrop-filter: blur(12px);
+  background: var(--app-glass-bg);
+  backdrop-filter: var(--app-glass-blur);
   border-bottom: 1px solid rgba(2, 6, 23, 0.06);
 }
 
@@ -123,8 +123,12 @@ const tableDisplay = computed(() => {
 
 .header-store-name {
   font-size: 18px;
-  font-weight: 700;
-  color: #e74c3c;
+  font-weight: 800;
+  background: linear-gradient(135deg, #e74c3c, #f0574a);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  letter-spacing: 0.5px;
 }
 
 .header-actions {
@@ -153,8 +157,8 @@ const tableDisplay = computed(() => {
   z-index: 100;
   display: flex;
   align-items: center;
-  background: rgba(255, 255, 255, 0.92);
-  backdrop-filter: blur(12px);
+  background: var(--app-glass-bg);
+  backdrop-filter: var(--app-glass-blur);
   border-top: 1px solid rgba(2, 6, 23, 0.06);
   height: var(--customer-bottom-bar-height);
   padding-bottom: var(--customer-safe-bottom);
@@ -200,6 +204,10 @@ const tableDisplay = computed(() => {
     &::before {
       opacity: 1;
     }
+
+    .tab-icon-wrapper {
+      transform: scale(1.1);
+    }
   }
 
   &:active {
@@ -214,6 +222,7 @@ const tableDisplay = computed(() => {
   height: 24px;
   position: relative;
   z-index: 1;
+  transition: transform var(--app-transition-base);
 }
 
 .tab-label {

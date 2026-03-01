@@ -2,9 +2,12 @@
 .DS_Store
 .idea/
 CLAUDE.md
-
+.claude
+.codex
 frontend/node_modules/
 frontend/dist/
 
 backend/data/
 backend/tmp/
+/AGENTS.md
+/plan.md

@@ -107,10 +107,37 @@ function openDish(dish: any) {
 }
 
 .hero {
-  background: linear-gradient(135deg, rgba(231, 76, 60, 0.16), rgba(52, 152, 219, 0.10));
-  border-radius: 16px;
-  padding: 16px;
-  border: 1px solid rgba(0, 0, 0, 0.04);
+  background: var(--app-gradient-hero);
+  border-radius: 18px;
+  padding: 20px 18px;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  box-shadow: 0 4px 20px rgba(231, 76, 60, 0.08);
+  position: relative;
+  overflow: hidden;
+
+  &::before {
+    content: '';
+    position: absolute;
+    right: -30px;
+    top: -30px;
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    background: rgba(231, 76, 60, 0.08);
+    pointer-events: none;
+  }
+
+  &::after {
+    content: '';
+    position: absolute;
+    right: 20px;
+    bottom: -20px;
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    background: rgba(52, 152, 219, 0.06);
+    pointer-events: none;
+  }
 }
 
 .hero-top {
@@ -118,12 +145,17 @@ function openDish(dish: any) {
   justify-content: space-between;
   align-items: center;
   gap: 10px;
+  position: relative;
+  z-index: 1;
 }
 
 .name {
-  font-size: 20px;
+  font-size: 22px;
   font-weight: 900;
-  color: #303133;
+  background: linear-gradient(135deg, #303133, #e74c3c);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
 }
 
 .desc {
@@ -139,23 +171,50 @@ function openDish(dish: any) {
   font-size: 12px;
 }
 
+.desc,
+.addr {
+  position: relative;
+  z-index: 1;
+}
+
 .hero-actions {
-  margin-top: 12px;
+  margin-top: 16px;
   display: flex;
   gap: 10px;
   align-items: center;
+  position: relative;
+  z-index: 1;
 }
 
 .section-title {
   font-weight: 900;
-  color: #303133;
+  font-size: 17px;
+  color: #1a1a1a;
   margin-bottom: 10px;
+  position: relative;
+  padding-left: 12px;
+
+  &::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 3px;
+    bottom: 3px;
+    width: 4px;
+    border-radius: 2px;
+    background: var(--app-gradient-primary);
+  }
 }
 
 .rec-list {
   display: flex;
   flex-direction: column;
   gap: 12px;
+
+  > :nth-child(1) { animation: fadeSlideUp 0.35s cubic-bezier(0.4, 0, 0.2, 1) 0.05s both; }
+  > :nth-child(2) { animation: fadeSlideUp 0.35s cubic-bezier(0.4, 0, 0.2, 1) 0.10s both; }
+  > :nth-child(3) { animation: fadeSlideUp 0.35s cubic-bezier(0.4, 0, 0.2, 1) 0.15s both; }
+  > :nth-child(4) { animation: fadeSlideUp 0.35s cubic-bezier(0.4, 0, 0.2, 1) 0.20s both; }
 }
 </style>
 

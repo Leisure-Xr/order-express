@@ -5,6 +5,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import { useMenuStore } from '@/stores/menu'
 import DishForm, { type DishFormValue } from '@/components/admin/DishForm.vue'
+import AdminPageHeader from '@/components/admin/AdminPageHeader.vue'
 import type { Dish } from '@/types'
 
 const { t } = useI18n()
@@ -119,16 +120,15 @@ async function save() {
 </script>
 
 <template>
-  <div class="dish-edit">
-    <div class="toolbar">
-      <div class="title">{{ pageTitle }}</div>
-      <div class="actions">
+  <div class="dish-edit admin-page">
+    <AdminPageHeader :title="pageTitle">
+      <template #actions>
         <el-button @click="router.back()">{{ t('common.back') }}</el-button>
         <el-button type="primary" :loading="saving" @click="save">
           {{ t('common.save') }}
         </el-button>
-      </div>
-    </div>
+      </template>
+    </AdminPageHeader>
 
     <el-skeleton v-if="loading" :rows="8" animated />
     <DishForm
@@ -141,22 +141,7 @@ async function save() {
 </template>
 
 <style scoped lang="scss">
-.toolbar {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 16px;
-}
-
-.title {
-  font-size: 18px;
-  font-weight: 700;
-  color: #303133;
-}
-
-.actions {
-  display: flex;
-  gap: 8px;
+.dish-edit {
+  width: 100%;
 }
 </style>
-

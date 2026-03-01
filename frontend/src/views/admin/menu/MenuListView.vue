@@ -5,11 +5,14 @@ import { useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { Plus, Edit, Delete, SwitchFilled } from '@element-plus/icons-vue'
 import { useMenuStore } from '@/stores/menu'
+import { useLocaleText } from '@/composables/useLocaleText'
+import AdminPageHeader from '@/components/admin/AdminPageHeader.vue'
 import type { Dish } from '@/types'
 
 const { t } = useI18n()
 const router = useRouter()
 const menuStore = useMenuStore()
+const { localText } = useLocaleText()
 
 const selectedCategoryId = ref<string>('all')
 const selectedStatus = ref<'all' | Dish['status']>('all')
@@ -17,12 +20,12 @@ const keyword = ref('')
 
 const categoryOptions = computed(() => [
   { id: 'all', label: t('common.all') },
-  ...menuStore.categories.map((c) => ({ id: c.id, label: `${c.icon || ''} ${c.name.zh}` })),
+  ...menuStore.categories.map((c) => ({ id: c.id, label: `${c.icon || ''} ${localText(c.name)}` })),
 ])
 
 const categoryNameMap = computed(() => {
   const map = new Map<string, string>()
-  for (const c of menuStore.categories) map.set(c.id, `${c.icon || ''} ${c.name.zh}`)
+  for (const c of menuStore.categories) map.set(c.id, `${c.icon || ''} ${localText(c.name)}`)
   return map
 })
 
@@ -57,6 +60,12 @@ function goEdit(dish: Dish) {
   router.push({ name: 'AdminDishEdit', params: { id: dish.id } })
 }
 
+function dishStatusLabel(status: Dish['status']): string {
+  if (status === 'on_sale') return t('menu.onSale')
+  if (status === 'off_sale') return t('menu.offShelf')
+  return t('menu.soldOut')
+}
+
 async function toggleStatus(dish: Dish) {
   try {
     await menuStore.toggleDishStatus(dish.id)
@@ -81,16 +90,23 @@ async function removeDish(dish: Dish) {
   if (ok) ElMessage.success(t('common.success'))
   else ElMessage.error(t('common.fail'))
 }
+
+function resetFilters() {
+  selectedCategoryId.value = 'all'
+  selectedStatus.value = 'all'
+  keyword.value = ''
+}
 </script>
 
 <template>
-  <div class="menu-list">
-    <div class="toolbar">
-      <div class="title">{{ t('routes.menuManagement') }}</div>
-      <el-button type="primary" :icon="Plus" @click="goCreate">
-        {{ t('menu.addItem') }}
-      </el-button>
-    </div>
+  <div class="menu-list admin-page">
+    <AdminPageHeader :title="t('routes.menuManagement')">
+      <template #actions>
+        <el-button type="primary" :icon="Plus" @click="goCreate">
+          {{ t('menu.addItem') }}
+        </el-button>
+      </template>
+    </AdminPageHeader>
 
     <el-card shadow="never" class="filters">
       <div class="filter-row">
@@ -110,67 +126,65 @@ async function removeDish(dish: Dish) {
     </el-card>
 
     <el-card shadow="never" class="table-shell" style="--el-card-padding: 0px">
-      <el-table :data="filteredDishes" v-loading="menuStore.dishesLoading" stripe>
-        <el-table-column label="Dish" min-width="240">
-          <template #default="{ row }">
-            <div class="dish-cell">
-              <img class="dish-thumb" :src="row.image" alt="" />
-              <div class="dish-info">
-                <div class="dish-name">{{ row.name.zh }} / {{ row.name.en }}</div>
-                <div class="dish-desc">{{ row.description.zh }}</div>
+      <div class="admin-table-scroll">
+        <el-table :data="filteredDishes" v-loading="menuStore.dishesLoading" stripe>
+          <template #empty>
+            <el-empty :description="t('common.noData')">
+              <div class="empty-actions">
+                <el-button @click="resetFilters">{{ t('common.reset') }}</el-button>
+                <el-button type="primary" :icon="Plus" @click="goCreate">{{ t('menu.addItem') }}</el-button>
               </div>
-            </div>
+            </el-empty>
           </template>
-        </el-table-column>
 
-        <el-table-column :label="t('menu.category')" width="160">
-          <template #default="{ row }">
-            {{ categoryNameMap.get(row.categoryId) || row.categoryId }}
-          </template>
-        </el-table-column>
+          <el-table-column label="Dish" min-width="240">
+            <template #default="{ row }">
+              <div class="dish-cell">
+                <img class="dish-thumb" :src="row.image" :alt="localText(row.name)" loading="lazy" />
+                <div class="dish-info">
+                  <div class="dish-name">{{ row.name.zh }} / {{ row.name.en }}</div>
+                  <div class="dish-desc">{{ row.description.zh }}</div>
+                </div>
+              </div>
+            </template>
+          </el-table-column>
 
-        <el-table-column :label="t('menu.price')" width="120">
-          <template #default="{ row }">¥{{ row.price.toFixed(2) }}</template>
-        </el-table-column>
+          <el-table-column :label="t('menu.category')" width="160">
+            <template #default="{ row }">
+              {{ categoryNameMap.get(row.categoryId) || row.categoryId }}
+            </template>
+          </el-table-column>
 
-        <el-table-column :label="t('common.status')" width="140">
-          <template #default="{ row }">
-            <el-tag :type="row.status === 'on_sale' ? 'success' : row.status === 'sold_out' ? 'danger' : 'info'">
-              {{ row.status }}
-            </el-tag>
-          </template>
-        </el-table-column>
+          <el-table-column :label="t('menu.price')" width="120">
+            <template #default="{ row }">¥{{ row.price.toFixed(2) }}</template>
+          </el-table-column>
 
-        <el-table-column :label="t('common.action')" width="260" fixed="right">
-          <template #default="{ row }">
-            <el-button-group>
-              <el-button type="primary" :icon="Edit" @click="goEdit(row)">{{ t('common.edit') }}</el-button>
-              <el-button :icon="SwitchFilled" @click="toggleStatus(row)">
-                {{ row.status === 'on_sale' ? t('menu.offShelf') : t('menu.onSale') }}
-              </el-button>
-              <el-button type="danger" :icon="Delete" @click="removeDish(row)">{{ t('common.delete') }}</el-button>
-            </el-button-group>
-          </template>
-        </el-table-column>
-      </el-table>
+          <el-table-column :label="t('common.status')" width="140">
+            <template #default="{ row }">
+              <el-tag :type="row.status === 'on_sale' ? 'success' : row.status === 'sold_out' ? 'danger' : 'info'">
+                {{ dishStatusLabel(row.status) }}
+              </el-tag>
+            </template>
+          </el-table-column>
+
+          <el-table-column :label="t('common.action')" width="260" fixed="right">
+            <template #default="{ row }">
+              <el-button-group>
+                <el-button type="primary" :icon="Edit" @click="goEdit(row)">{{ t('common.edit') }}</el-button>
+                <el-button :icon="SwitchFilled" @click="toggleStatus(row)">
+                  {{ row.status === 'on_sale' ? t('menu.offShelf') : t('menu.onSale') }}
+                </el-button>
+                <el-button type="danger" :icon="Delete" @click="removeDish(row)">{{ t('common.delete') }}</el-button>
+              </el-button-group>
+            </template>
+          </el-table-column>
+        </el-table>
+      </div>
     </el-card>
   </div>
 </template>
 
 <style scoped lang="scss">
-.toolbar {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 16px;
-}
-
-.title {
-  font-size: 18px;
-  font-weight: 700;
-  color: #303133;
-}
-
 .filters {
   margin-bottom: 16px;
 }
@@ -180,6 +194,13 @@ async function removeDish(dish: Dish) {
   gap: 12px;
   flex-wrap: wrap;
   align-items: center;
+}
+
+.empty-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  flex-wrap: wrap;
 }
 
 .dish-cell {

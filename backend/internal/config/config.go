@@ -28,9 +28,11 @@ type RedisConfig struct {
 
 type RateLimitConfig struct {
 	Enabled           bool
+	TrustProxy        bool
 	LoginPerMin       int
 	OrderCreatePerMin int
 	PaymentPerMin     int
+	PublicReadPerMin  int
 }
 
 type Config struct {
@@ -81,9 +83,11 @@ func Load() *Config {
 		CacheTTLSeconds: getEnvInt("CACHE_TTL_SECONDS", 60),
 		RateLimit: RateLimitConfig{
 			Enabled:           getEnvBool("RL_ENABLED", false),
+			TrustProxy:        getEnvBool("RL_TRUST_PROXY", false),
 			LoginPerMin:       getEnvInt("RL_LOGIN_PER_MIN", 20),
 			OrderCreatePerMin: getEnvInt("RL_ORDER_CREATE_PER_MIN", 30),
 			PaymentPerMin:     getEnvInt("RL_PAYMENT_PER_MIN", 30),
+			PublicReadPerMin:  getEnvInt("RL_PUBLIC_READ_PER_MIN", 60),
 		},
 	}
 }

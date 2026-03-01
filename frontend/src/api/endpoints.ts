@@ -26,6 +26,7 @@ export const endpoints = {
     get: (id: string) => `/api/orders/${encodeURIComponent(id)}`,
     updateStatus: (id: string) => `/api/orders/${encodeURIComponent(id)}/status`,
     history: '/api/orders/history',
+    stats: '/api/orders/stats',
   },
   payments: {
     initiate: '/api/payments/initiate',

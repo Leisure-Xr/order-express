@@ -72,6 +72,11 @@ function remove() {
   background: #ffffff;
   border-radius: 12px;
   box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
+  transition: box-shadow var(--app-transition-base);
+
+  &:hover {
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+  }
 }
 
 .thumb {
@@ -113,9 +118,10 @@ function remove() {
 }
 
 .opt {
-  background: #f5f7fa;
+  background: linear-gradient(135deg, #f5f7fa, #eef2f7);
   border-radius: 999px;
   padding: 3px 8px;
+  border: 1px solid rgba(0, 0, 0, 0.03);
 }
 
 .bottom {

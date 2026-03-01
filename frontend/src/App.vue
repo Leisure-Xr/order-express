@@ -35,7 +35,11 @@ const layoutProps = computed(() => (layoutName.value === 'blank' ? { showBack: b
 
 <template>
   <component :is="layoutComponent" v-bind="layoutProps">
-    <RouterView />
+    <RouterView v-slot="{ Component }">
+      <Transition name="page-fade" mode="out-in">
+        <component :is="Component" />
+      </Transition>
+    </RouterView>
   </component>
 </template>
 

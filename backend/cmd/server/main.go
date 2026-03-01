@@ -76,7 +76,7 @@ func main() {
 	}
 
 	c := cache.New(rdb, "oe:v1:")
-	rl := middleware.NewRateLimiter(rdb, "oe:v1:")
+	rl := middleware.NewRateLimiter(rdb, "oe:v1:", cfg.RateLimit.TrustProxy)
 
 	switch cmd {
 	case "migrate":

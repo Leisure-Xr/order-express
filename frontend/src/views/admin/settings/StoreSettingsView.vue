@@ -3,6 +3,7 @@ import { onMounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { ElMessage } from 'element-plus'
 import { useSettingsStore } from '@/stores/settings'
+import AdminPageHeader from '@/components/admin/AdminPageHeader.vue'
 import type { StoreInfo, BusinessHours, DeliverySettings } from '@/types'
 
 const { t } = useI18n()
@@ -65,13 +66,15 @@ async function saveDelivery() {
 </script>
 
 <template>
-  <div class="settings-page">
-    <div class="title">{{ t('routes.storeSettings') }}</div>
+  <div class="settings-page admin-page">
+    <AdminPageHeader :title="t('routes.storeSettings')" />
 
     <el-tabs v-model="activeTab">
       <el-tab-pane :label="t('settings.basicInfo')" name="basic">
         <el-card shadow="never" class="card">
-          <el-form v-if="storeInfoModel" label-position="top">
+          <el-skeleton v-if="settingsStore.loading && !storeInfoModel" :rows="8" animated />
+          <el-empty v-else-if="!storeInfoModel" :description="t('common.noData')" />
+          <el-form v-else label-position="top">
             <div class="grid">
               <el-form-item :label="t('settings.shopName') + ' (ZH)'" class="col-6">
                 <el-input v-model="storeInfoModel.name.zh" />
@@ -95,7 +98,15 @@ async function saveDelivery() {
                 <el-input v-model="storeInfoModel.phone" />
               </el-form-item>
               <el-form-item :label="t('settings.shopLogo')" class="col-6">
-                <el-input v-model="storeInfoModel.logo" placeholder="https://..." />
+                <div class="logo-field">
+                  <el-input v-model="storeInfoModel.logo" placeholder="https://..." />
+                  <el-avatar
+                    v-if="storeInfoModel.logo"
+                    :size="34"
+                    :src="storeInfoModel.logo"
+                    class="logo-preview"
+                  />
+                </div>
               </el-form-item>
             </div>
 
@@ -148,7 +159,9 @@ async function saveDelivery() {
 
       <el-tab-pane :label="t('settings.deliverySettings')" name="delivery">
         <el-card shadow="never" class="card">
-          <el-form v-if="deliveryModel" label-position="top">
+          <el-skeleton v-if="settingsStore.loading && !deliveryModel" :rows="8" animated />
+          <el-empty v-else-if="!deliveryModel" :description="t('common.noData')" />
+          <el-form v-else label-position="top">
             <el-form-item :label="t('settings.enableDelivery')">
               <el-switch v-model="deliveryModel.enabled" />
             </el-form-item>
@@ -189,15 +202,19 @@ async function saveDelivery() {
   max-width: 1100px;
 }
 
-.title {
-  font-size: 18px;
-  font-weight: 800;
-  color: #303133;
-  margin-bottom: 12px;
-}
-
 .card {
   border-radius: 12px;
+}
+
+.logo-field {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.logo-preview {
+  border: 1px solid rgba(2, 6, 23, 0.10);
+  flex: none;
 }
 
 .grid {

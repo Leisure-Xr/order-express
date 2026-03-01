@@ -63,3 +63,24 @@ type CreateOrderItem struct {
 	Quantity        int              `json:"quantity"`
 	SelectedOptions []SelectedOption `json:"selectedOptions"`
 }
+
+type DailyRevenue struct {
+	Date   string  `json:"date"`
+	Amount float64 `json:"amount"`
+	Orders int     `json:"orders"`
+}
+
+type PopularItem struct {
+	DishID   string     `json:"dishId"`
+	DishName I18nString `json:"dishName"`
+	Count    int        `json:"count"`
+}
+
+type OrderStats struct {
+	TotalOrders   int            `json:"totalOrders"`
+	PaidRevenue   float64        `json:"paidRevenue"`
+	PendingOrders int            `json:"pendingOrders"`
+	DailyRevenue  []DailyRevenue `json:"dailyRevenue"`
+	PopularItems  []PopularItem  `json:"popularItems"`
+	OrdersByType  map[string]int `json:"ordersByType"`
+}

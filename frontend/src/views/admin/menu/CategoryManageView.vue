@@ -5,6 +5,7 @@ import { ElMessage, ElMessageBox } from 'element-plus'
 import { ArrowUp, ArrowDown, Plus, Edit, Delete } from '@element-plus/icons-vue'
 import { useMenuStore } from '@/stores/menu'
 import CategoryForm, { type CategoryFormValue } from '@/components/admin/CategoryForm.vue'
+import AdminPageHeader from '@/components/admin/AdminPageHeader.vue'
 import type { Category } from '@/types'
 
 const { t } = useI18n()
@@ -126,53 +127,62 @@ async function move(category: Category, direction: 'up' | 'down') {
 </script>
 
 <template>
-  <div class="category-manage">
-    <div class="toolbar">
-      <div class="title">{{ t('routes.categoryManagement') }}</div>
-      <el-button type="primary" :icon="Plus" @click="openCreate">
-        {{ t('menu.addCategory') }}
-      </el-button>
-    </div>
+  <div class="category-manage admin-page">
+    <AdminPageHeader :title="t('routes.categoryManagement')">
+      <template #actions>
+        <el-button type="primary" :icon="Plus" @click="openCreate">
+          {{ t('menu.addCategory') }}
+        </el-button>
+      </template>
+    </AdminPageHeader>
 
     <el-card shadow="never" class="table-shell" style="--el-card-padding: 0px">
-      <el-table :data="sortedCategories" v-loading="menuStore.categoriesLoading" stripe>
-        <el-table-column prop="sortOrder" label="#" width="70" />
-        <el-table-column label="Icon" width="90">
-          <template #default="{ row }">
-            <span style="font-size: 18px">{{ row.icon || '-' }}</span>
+      <div class="admin-table-scroll">
+        <el-table :data="sortedCategories" v-loading="menuStore.categoriesLoading" stripe>
+          <template #empty>
+            <el-empty :description="t('common.noData')">
+              <el-button type="primary" :icon="Plus" @click="openCreate">{{ t('menu.addCategory') }}</el-button>
+            </el-empty>
           </template>
-        </el-table-column>
-        <el-table-column label="Name">
-          <template #default="{ row }">
-            <div class="name-cell">
-              <div class="zh">{{ row.name.zh }}</div>
-              <div class="en">{{ row.name.en }}</div>
-            </div>
-          </template>
-        </el-table-column>
-        <el-table-column :label="t('common.status')" width="120">
-          <template #default="{ row }">
-            <el-tag :type="row.status === 'active' ? 'success' : 'info'">
-              {{ row.status }}
-            </el-tag>
-          </template>
-        </el-table-column>
-        <el-table-column label="Dishes" width="120">
-          <template #default="{ row }">
-            {{ row.dishCount ?? 0 }}
-          </template>
-        </el-table-column>
-        <el-table-column :label="t('common.action')" width="240" fixed="right">
-          <template #default="{ row }">
-            <el-button-group>
-              <el-button :icon="ArrowUp" @click="move(row, 'up')" :disabled="row.sortOrder === 1" />
-              <el-button :icon="ArrowDown" @click="move(row, 'down')" :disabled="row.sortOrder === sortedCategories.length" />
-              <el-button type="primary" :icon="Edit" @click="openEdit(row)" />
-              <el-button type="danger" :icon="Delete" @click="removeCategory(row)" />
-            </el-button-group>
-          </template>
-        </el-table-column>
-      </el-table>
+
+          <el-table-column prop="sortOrder" label="#" width="70" />
+          <el-table-column label="Icon" width="90">
+            <template #default="{ row }">
+              <span style="font-size: 18px">{{ row.icon || '-' }}</span>
+            </template>
+          </el-table-column>
+          <el-table-column label="Name">
+            <template #default="{ row }">
+              <div class="name-cell">
+                <div class="zh">{{ row.name.zh }}</div>
+                <div class="en">{{ row.name.en }}</div>
+              </div>
+            </template>
+          </el-table-column>
+          <el-table-column :label="t('common.status')" width="120">
+            <template #default="{ row }">
+              <el-tag :type="row.status === 'active' ? 'success' : 'info'">
+                {{ row.status }}
+              </el-tag>
+            </template>
+          </el-table-column>
+          <el-table-column label="Dishes" width="120">
+            <template #default="{ row }">
+              {{ row.dishCount ?? 0 }}
+            </template>
+          </el-table-column>
+          <el-table-column :label="t('common.action')" width="240" fixed="right">
+            <template #default="{ row }">
+              <el-button-group>
+                <el-button :icon="ArrowUp" @click="move(row, 'up')" :disabled="row.sortOrder === 1" />
+                <el-button :icon="ArrowDown" @click="move(row, 'down')" :disabled="row.sortOrder === sortedCategories.length" />
+                <el-button type="primary" :icon="Edit" @click="openEdit(row)" />
+                <el-button type="danger" :icon="Delete" @click="removeCategory(row)" />
+              </el-button-group>
+            </template>
+          </el-table-column>
+        </el-table>
+      </div>
     </el-card>
 
     <el-dialog v-model="dialogVisible" :title="editingId ? t('common.edit') : t('common.add')" width="520px">
@@ -186,19 +196,6 @@ async function move(category: Category, direction: 'up' | 'down') {
 </template>
 
 <style scoped lang="scss">
-.toolbar {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 16px;
-}
-
-.title {
-  font-size: 18px;
-  font-weight: 700;
-  color: #303133;
-}
-
 .name-cell {
   .zh {
     font-weight: 600;

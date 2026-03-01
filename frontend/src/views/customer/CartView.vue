@@ -104,9 +104,10 @@ async function clearCart() {
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  background: rgba(255, 255, 255, 0.95);
-  backdrop-filter: blur(10px);
-  box-shadow: 0 -1px 6px rgba(0, 0, 0, 0.06);
+  background: var(--app-glass-bg-strong);
+  backdrop-filter: var(--app-glass-blur);
+  box-shadow: 0 -4px 24px rgba(0, 0, 0, 0.08);
+  border-radius: 16px 16px 0 0;
 }
 
 .subtotal {
@@ -117,6 +118,7 @@ async function clearCart() {
 .price {
   color: #e74c3c;
   font-weight: 900;
+  font-size: 18px;
 }
 
 .checkout-btn {

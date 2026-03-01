@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
+	"log"
 	"net/http"
 	"strings"
 	"time"
@@ -94,7 +95,16 @@ func (h *PaymentHandler) Initiate(w http.ResponseWriter, r *http.Request) {
 			return gorm.ErrRecordNotFound
 		}
 		if order.Total != body.Amount {
-			return fmt.Errorf("amount mismatch: expected %.2f", order.Total)
+			return fmt.Errorf("amount mismatch: expected %.2f, got %.2f", order.Total, body.Amount)
+		}
+
+		// Check for existing paid payment (idempotency)
+		var existingCount int64
+		if err := tx.Raw(`SELECT COUNT(*) FROM payments WHERE order_id=? AND status='paid'`, body.OrderID).Scan(&existingCount).Error; err != nil {
+			return err
+		}
+		if existingCount > 0 {
+			return fmt.Errorf("duplicate payment")
 		}
 
 		// Simulate immediate payment success
@@ -128,8 +138,13 @@ func (h *PaymentHandler) Initiate(w http.ResponseWriter, r *http.Request) {
 			NotFound(w, "order not found")
 			return
 		}
-		if strings.HasPrefix(err.Error(), "amount mismatch:") {
-			BadRequest(w, err.Error())
+		if strings.Contains(err.Error(), "amount mismatch") {
+			log.Printf("payment amount mismatch: %v", err)
+			BadRequest(w, "payment amount does not match order total")
+			return
+		}
+		if strings.Contains(err.Error(), "duplicate payment") {
+			BadRequest(w, "order already paid")
 			return
 		}
 		Fail(w, http.StatusInternalServerError, "database error")

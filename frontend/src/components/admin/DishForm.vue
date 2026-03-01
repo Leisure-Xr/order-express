@@ -1,13 +1,14 @@
 <script setup lang="ts">
-import { ref, watch, computed } from 'vue'
+import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import type { Category, Dish, DishOption, DishOptionValue } from '@/types'
 
 export type DishFormValue = Omit<Dish, 'id' | 'createdAt' | 'updatedAt'>
 
+const model = defineModel<DishFormValue>({ required: true })
+
 const props = withDefaults(
   defineProps<{
-    modelValue: DishFormValue
     categories: Category[]
     disabled?: boolean
   }>(),
@@ -16,33 +17,7 @@ const props = withDefaults(
   },
 )
 
-const emit = defineEmits<{
-  (e: 'update:modelValue', value: DishFormValue): void
-}>()
-
 const { t } = useI18n()
-
-function clone<T>(value: T): T {
-  return JSON.parse(JSON.stringify(value)) as T
-}
-
-const model = ref<DishFormValue>(clone(props.modelValue))
-
-watch(
-  () => props.modelValue,
-  (value) => {
-    model.value = clone(value)
-  },
-  { deep: true },
-)
-
-watch(
-  model,
-  (value) => {
-    emit('update:modelValue', clone(value))
-  },
-  { deep: true },
-)
 
 const statusOptions = computed(() => [
   { value: 'on_sale', label: t('menu.onSale') },
@@ -271,5 +246,34 @@ function removeOptionValue(optionIndex: number, valueIndex: number) {
 .value-input {
   width: 100%;
 }
-</style>
 
+@media (max-width: 900px) {
+  .grid {
+    grid-template-columns: repeat(1, 1fr);
+  }
+
+  .col-4,
+  .col-6 {
+    grid-column: span 1;
+  }
+}
+
+@media (max-width: 700px) {
+  .value-row {
+    display: flex;
+    flex-wrap: wrap;
+  }
+
+  .value-input {
+    flex: 1 1 140px;
+  }
+
+  :deep(.el-input-number) {
+    flex: 1 1 140px;
+  }
+
+  :deep(.el-button) {
+    margin-left: auto;
+  }
+}
+</style>

@@ -1,25 +1,72 @@
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
+import { useRouter, type RouteLocationRaw } from 'vue-router'
 import { ElMessage } from 'element-plus'
+import { Plus, Food, List, Grid, Setting } from '@element-plus/icons-vue'
 import { useOrderStore } from '@/stores/order'
 import { useTableStore } from '@/stores/table'
 import { useLocaleText } from '@/composables/useLocaleText'
-import type { Order } from '@/types'
-import { formatDate } from '@/utils/format'
+import AdminPageHeader from '@/components/admin/AdminPageHeader.vue'
 
 const { t } = useI18n()
+const router = useRouter()
 const { localText } = useLocaleText()
 const orderStore = useOrderStore()
 const tableStore = useTableStore()
 
 const loading = ref(false)
 
-onMounted(async () => {
+function formatDateParam(d: Date): string {
+  const y = d.getFullYear()
+  const m = String(d.getMonth() + 1).padStart(2, '0')
+  const day = String(d.getDate()).padStart(2, '0')
+  return `${y}-${m}-${day}`
+}
+
+const today = new Date()
+const sevenDaysAgo = new Date()
+sevenDaysAgo.setDate(today.getDate() - 6)
+
+const dateRange = ref<[Date, Date]>([sevenDaysAgo, today])
+
+const shortcuts = computed(() => [
+  {
+    text: t('dashboard.today'),
+    value: () => {
+      const d = new Date()
+      return [d, d] as [Date, Date]
+    },
+  },
+  {
+    text: t('dashboard.last7Days'),
+    value: () => {
+      const end = new Date()
+      const start = new Date()
+      start.setDate(start.getDate() - 6)
+      return [start, end] as [Date, Date]
+    },
+  },
+  {
+    text: t('dashboard.last30Days'),
+    value: () => {
+      const end = new Date()
+      const start = new Date()
+      start.setDate(start.getDate() - 29)
+      return [start, end] as [Date, Date]
+    },
+  },
+])
+
+async function loadStats() {
   loading.value = true
   try {
+    const [from, to] = dateRange.value
     await Promise.all([
-      orderStore.fetchOrders({ status: 'all', page: 1, pageSize: 200 }),
+      orderStore.fetchOrderStats({
+        from: formatDateParam(from),
+        to: formatDateParam(to),
+      }),
       tableStore.fetchTables(),
     ])
   } catch (e: any) {
@@ -27,109 +74,100 @@ onMounted(async () => {
   } finally {
     loading.value = false
   }
-})
-
-const baseDate = computed(() => {
-  const times = orderStore.orders.map((o) => new Date(o.createdAt).getTime())
-  const max = times.length ? Math.max(...times) : Date.now()
-  return new Date(max)
-})
-
-function sameDay(a: Date, b: Date): boolean {
-  return a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate()
 }
 
-const todayOrders = computed(() => {
-  const today = baseDate.value
-  return orderStore.orders.filter((o) => sameDay(new Date(o.createdAt), today)).length
-})
+onMounted(loadStats)
+watch(dateRange, loadStats)
 
-const todayRevenue = computed(() => {
-  const today = baseDate.value
-  return orderStore.orders
-    .filter((o) => sameDay(new Date(o.createdAt), today) && o.payment.status === 'paid')
-    .reduce((sum, o) => sum + o.total, 0)
-})
-
-const pendingOrders = computed(() => orderStore.orders.filter((o) => o.status === 'pending').length)
+const stats = computed(() => orderStore.orderStats)
+const totalOrders = computed(() => stats.value?.totalOrders ?? 0)
+const paidRevenue = computed(() => stats.value?.paidRevenue ?? 0)
+const pendingOrders = computed(() => stats.value?.pendingOrders ?? 0)
 const tablesInUse = computed(() => tableStore.occupiedTables.length)
 
-const recentOrders = computed(() => orderStore.orders.slice(0, 6))
-
-const popularDishes = computed(() => {
-  const map = new Map<string, { name: { zh: string; en: string }; count: number }>()
-  for (const o of orderStore.orders) {
-    for (const it of o.items) {
-      const cur = map.get(it.dishId)
-      if (cur) cur.count += it.quantity
-      else map.set(it.dishId, { name: it.dishName, count: it.quantity })
-    }
-  }
-  return [...map.entries()]
-    .map(([dishId, v]) => ({ dishId, ...v }))
-    .sort((a, b) => b.count - a.count)
-    .slice(0, 6)
-})
-
-const revenueLastWeek = computed(() => {
-  const end = new Date(baseDate.value)
-  const days: { date: string; amount: number }[] = []
-  for (let i = 6; i >= 0; i--) {
-    const d = new Date(end)
-    d.setDate(d.getDate() - i)
-    const key = d.toISOString().slice(0, 10)
-    const amount = orderStore.orders
-      .filter((o) => o.payment.status === 'paid' && o.createdAt.slice(0, 10) === key)
-      .reduce((sum, o) => sum + o.total, 0)
-    days.push({ date: key.slice(5), amount })
-  }
-
+const revenueChart = computed(() => {
+  const days = (stats.value?.dailyRevenue ?? []).map((d) => ({
+    date: d.date.slice(5),
+    amount: d.amount,
+  }))
   const max = Math.max(...days.map((d) => d.amount), 1)
   return { days, max }
 })
+
+const popularItems = computed(() => stats.value?.popularItems ?? [])
+
+const quickActions = computed(() => [
+  { icon: Plus, label: t('menu.addItem'), to: { name: 'AdminDishCreate' }, color: '#e74c3c' },
+  { icon: Food, label: t('routes.menuManagement'), to: { name: 'AdminMenuList' }, color: '#f39c12' },
+  { icon: List, label: t('routes.orderManagement'), to: { name: 'AdminOrderList' }, color: '#3498db' },
+  { icon: Grid, label: t('routes.tableManagement'), to: { name: 'AdminTableManage' }, color: '#27ae60' },
+  { icon: Setting, label: t('routes.storeSettings'), to: { name: 'AdminStoreSettings' }, color: '#7c3aed' },
+])
+
+function openRoute(to: RouteLocationRaw) {
+  router.push(to)
+}
 </script>
 
 <template>
-  <div class="dashboard">
-    <div class="title">{{ t('routes.dashboard') }}</div>
+  <div class="dashboard admin-page">
+    <AdminPageHeader :title="t('routes.dashboard')" :description="t('dashboard.overview')">
+      <template #actions>
+        <el-date-picker
+          v-model="dateRange"
+          type="daterange"
+          :start-placeholder="t('dashboard.startDate')"
+          :end-placeholder="t('dashboard.endDate')"
+          :shortcuts="shortcuts"
+          format="YYYY-MM-DD"
+          :clearable="false"
+          size="default"
+          style="max-width: 300px"
+        />
+      </template>
+    </AdminPageHeader>
 
     <el-row :gutter="12">
-      <el-col :span="6">
-        <el-card shadow="never" class="stat" v-loading="loading">
-          <div class="stat-label">{{ t('dashboard.todayOrders') }}</div>
-          <div class="stat-value">{{ todayOrders }}</div>
+      <el-col :xs="24" :sm="12" :md="6">
+        <el-card shadow="never" class="stat stat-orders" v-loading="loading">
+          <div class="stat-label">{{ t('dashboard.totalOrders') }}</div>
+          <div class="stat-value">{{ totalOrders }}</div>
+          <div class="stat-decor"></div>
         </el-card>
       </el-col>
-      <el-col :span="6">
-        <el-card shadow="never" class="stat" v-loading="loading">
-          <div class="stat-label">{{ t('dashboard.todayRevenue') }}</div>
-          <div class="stat-value">¥{{ todayRevenue.toFixed(2) }}</div>
+      <el-col :xs="24" :sm="12" :md="6">
+        <el-card shadow="never" class="stat stat-revenue" v-loading="loading">
+          <div class="stat-label">{{ t('dashboard.paidRevenue') }}</div>
+          <div class="stat-value">¥{{ paidRevenue.toFixed(2) }}</div>
+          <div class="stat-decor"></div>
         </el-card>
       </el-col>
-      <el-col :span="6">
-        <el-card shadow="never" class="stat" v-loading="loading">
+      <el-col :xs="24" :sm="12" :md="6">
+        <el-card shadow="never" class="stat stat-pending" v-loading="loading">
           <div class="stat-label">{{ t('dashboard.pendingOrders') }}</div>
           <div class="stat-value">{{ pendingOrders }}</div>
+          <div class="stat-decor"></div>
         </el-card>
       </el-col>
-      <el-col :span="6">
-        <el-card shadow="never" class="stat" v-loading="loading">
+      <el-col :xs="24" :sm="12" :md="6">
+        <el-card shadow="never" class="stat stat-tables" v-loading="loading">
           <div class="stat-label">{{ t('dashboard.tablesInUse') }}</div>
           <div class="stat-value">{{ tablesInUse }}</div>
+          <div class="stat-decor"></div>
         </el-card>
       </el-col>
     </el-row>
 
     <el-row :gutter="12" style="margin-top: 12px">
-      <el-col :span="14">
+      <el-col :xs="24" :lg="14">
         <el-card shadow="never" class="card" v-loading="loading">
           <template #header>
-            <div class="card-title">{{ t('dashboard.revenueLastWeek') }}</div>
+            <div class="card-title">{{ t('dashboard.revenueChart') }}</div>
           </template>
 
           <div class="bars">
-            <div v-for="d in revenueLastWeek.days" :key="d.date" class="bar-item">
-              <div class="bar" :style="{ height: `${(d.amount / revenueLastWeek.max) * 120}px` }"></div>
+            <div v-for="d in revenueChart.days" :key="d.date" class="bar-item">
+              <div class="bar" :style="{ height: `${(d.amount / revenueChart.max) * 120}px` }"></div>
               <div class="bar-label">{{ d.date }}</div>
               <div class="bar-val">¥{{ d.amount.toFixed(0) }}</div>
             </div>
@@ -137,16 +175,17 @@ const revenueLastWeek = computed(() => {
         </el-card>
       </el-col>
 
-      <el-col :span="10">
+      <el-col :xs="24" :lg="10">
         <el-card shadow="never" class="card" v-loading="loading">
           <template #header>
             <div class="card-title">{{ t('dashboard.popularItems') }}</div>
           </template>
 
-          <div class="rank">
-            <div v-for="(d, idx) in popularDishes" :key="d.dishId" class="rank-row">
-              <div class="rank-idx">{{ idx + 1 }}</div>
-              <div class="rank-name">{{ localText(d.name) }}</div>
+          <el-empty v-if="!popularItems.length" :description="t('common.noData')" />
+          <div v-else class="rank">
+            <div v-for="(d, idx) in popularItems" :key="d.dishId" class="rank-row">
+              <div class="rank-idx" :class="{ gold: idx === 0, silver: idx === 1, bronze: idx === 2 }">{{ idx + 1 }}</div>
+              <div class="rank-name">{{ localText(d.dishName) }}</div>
               <div class="rank-count">×{{ d.count }}</div>
             </div>
           </div>
@@ -155,39 +194,31 @@ const revenueLastWeek = computed(() => {
     </el-row>
 
     <el-row :gutter="12" style="margin-top: 12px">
-      <el-col :span="24">
+      <el-col :xs="24">
         <el-card shadow="never" class="card" v-loading="loading">
           <template #header>
-            <div class="card-title">{{ t('dashboard.recentOrders') }}</div>
+            <div class="card-title">{{ t('common.action') }}</div>
           </template>
 
-          <el-table :data="recentOrders" stripe>
-            <el-table-column label="Order" min-width="200">
-              <template #default="{ row }">
-                <div class="order-no">{{ row.orderNumber }}</div>
-                <div class="order-time">{{ formatDate(row.createdAt) }}</div>
-              </template>
-            </el-table-column>
-            <el-table-column :label="t('order.orderType')" width="120">
-              <template #default="{ row }">
-                {{
-                  row.type === 'dine_in'
-                    ? t('order.dineIn')
-                    : row.type === 'takeaway'
-                      ? t('order.takeout')
-                      : t('order.pickup')
-                }}
-              </template>
-            </el-table-column>
-            <el-table-column :label="t('common.status')" width="140">
-              <template #default="{ row }">
-                {{ t(`order.status.${row.status}`) }}
-              </template>
-            </el-table-column>
-            <el-table-column :label="t('payment.amount')" width="140">
-              <template #default="{ row }">¥{{ row.total.toFixed(2) }}</template>
-            </el-table-column>
-          </el-table>
+          <div class="quick-grid">
+            <div
+              v-for="a in quickActions"
+              :key="a.label"
+              class="quick-item hoverable-card"
+              :style="{ '--accent': a.color }"
+              role="button"
+              tabindex="0"
+              @click="openRoute(a.to)"
+              @keydown.enter.prevent="openRoute(a.to)"
+              @keydown.space.prevent="openRoute(a.to)"
+            >
+              <div class="quick-icon">
+                <el-icon :size="18"><component :is="a.icon" /></el-icon>
+              </div>
+              <div class="quick-label">{{ a.label }}</div>
+              <div class="quick-arrow">→</div>
+            </div>
+          </div>
         </el-card>
       </el-col>
     </el-row>
@@ -196,38 +227,111 @@ const revenueLastWeek = computed(() => {
 
 <style scoped lang="scss">
 .dashboard {
-  max-width: 1400px;
-}
-
-.title {
-  font-size: 18px;
-  font-weight: 800;
-  color: #303133;
-  margin-bottom: 12px;
+  width: 100%;
 }
 
 .stat {
-  border-radius: 12px;
+  border-radius: 14px;
+  position: relative;
+  overflow: hidden;
+  transition: transform var(--app-transition-base),
+              box-shadow var(--app-transition-base);
+
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.10);
+  }
 }
+
+.stat-decor {
+  position: absolute;
+  right: -16px;
+  top: -16px;
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  opacity: 0.15;
+  pointer-events: none;
+}
+
+.stat-orders .stat-decor { background: #e74c3c; }
+.stat-orders .stat-value { color: #e74c3c; }
+.stat-revenue .stat-decor { background: #27ae60; }
+.stat-revenue .stat-value { color: #27ae60; }
+.stat-pending .stat-decor { background: #f39c12; }
+.stat-pending .stat-value { color: #f39c12; }
+.stat-tables .stat-decor { background: #3498db; }
+.stat-tables .stat-value { color: #3498db; }
 
 .stat-label {
   font-size: 12px;
   color: #909399;
+  letter-spacing: 0.3px;
 }
 
 .stat-value {
   margin-top: 6px;
-  font-size: 22px;
+  font-size: 24px;
   font-weight: 900;
-  color: #303133;
 }
 
 .card {
-  border-radius: 12px;
+  border-radius: 14px;
+  transition: box-shadow var(--app-transition-base);
+
+  &:hover {
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.06);
+  }
 }
 
 .card-title {
   font-weight: 700;
+}
+
+.quick-grid {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.quick-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 12px;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.85);
+  border: 1px solid rgba(2, 6, 23, 0.06);
+  cursor: pointer;
+  user-select: none;
+  min-width: 0;
+}
+
+.quick-icon {
+  width: 34px;
+  height: 34px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #ffffff;
+  background: linear-gradient(135deg, var(--accent), rgba(0, 0, 0, 0.25));
+  flex: none;
+}
+
+.quick-label {
+  font-weight: 800;
+  color: #111827;
+  font-size: 13px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.quick-arrow {
+  margin-left: auto;
+  color: rgba(17, 24, 39, 0.50);
+  font-weight: 900;
 }
 
 .bars {
@@ -241,14 +345,16 @@ const revenueLastWeek = computed(() => {
 .bar-item {
   flex: 1;
   text-align: center;
+  min-width: 0;
 }
 
 .bar {
   width: 100%;
-  background: rgba(231, 76, 60, 0.22);
-  border: 1px solid rgba(231, 76, 60, 0.35);
+  background: linear-gradient(180deg, rgba(231, 76, 60, 0.35), rgba(231, 76, 60, 0.12));
+  border: 1px solid rgba(231, 76, 60, 0.25);
   border-radius: 10px;
   min-height: 6px;
+  transition: height 0.6s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .bar-label {
@@ -278,7 +384,29 @@ const revenueLastWeek = computed(() => {
 
 .rank-idx {
   font-weight: 900;
-  color: #e74c3c;
+  color: #909399;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px;
+  font-size: 12px;
+
+  &.gold {
+    background: linear-gradient(135deg, #f9d423, #f39c12);
+    color: #fff;
+  }
+
+  &.silver {
+    background: linear-gradient(135deg, #bdc3c7, #95a5a6);
+    color: #fff;
+  }
+
+  &.bronze {
+    background: linear-gradient(135deg, #e67e22, #d35400);
+    color: #fff;
+  }
 }
 
 .rank-name {
@@ -295,25 +423,15 @@ const revenueLastWeek = computed(() => {
   font-weight: 700;
 }
 
-.order-no {
-  font-weight: 800;
-  color: #303133;
-}
-
-.order-time {
-  font-size: 12px;
-  color: #909399;
-}
-
 @media (max-width: 1200px) {
-  :deep(.el-col-6) {
-    width: 50%;
+  .quick-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 }
 
-@media (max-width: 800px) {
-  :deep(.el-col-6) {
-    width: 100%;
+@media (max-width: 700px) {
+  .quick-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 </style>

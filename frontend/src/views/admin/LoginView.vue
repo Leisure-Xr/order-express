@@ -82,21 +82,30 @@ async function handleLogin() {
   min-height: 100vh;
   padding: 24px;
 
-  background: radial-gradient(circle at 20% 20%, rgba(231, 76, 60, 0.12), transparent 45%),
-    radial-gradient(circle at 80% 0%, rgba(52, 152, 219, 0.10), transparent 50%),
+  background: radial-gradient(circle at 20% 20%, rgba(231, 76, 60, 0.14), transparent 45%),
+    radial-gradient(circle at 80% 0%, rgba(52, 152, 219, 0.12), transparent 50%),
+    radial-gradient(circle at 50% 100%, rgba(243, 156, 18, 0.08), transparent 40%),
     #f5f5f5;
 }
 
 .login-card {
   width: 100%;
   max-width: 420px;
-  border-radius: 12px;
+  border-radius: 18px;
+  backdrop-filter: blur(12px);
+  background: rgba(255, 255, 255, 0.92);
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.10);
+  animation: fadeSlideUp 0.5s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .login-title {
-  font-size: 18px;
-  font-weight: 700;
-  color: #303133;
+  font-size: 22px;
+  font-weight: 800;
+  background: linear-gradient(135deg, #303133, #e74c3c);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
 }
 
 .login-options {
@@ -108,5 +117,8 @@ async function handleLogin() {
 
 .login-btn {
   width: 100%;
+  height: 44px;
+  font-size: 15px;
+  font-weight: 700;
 }
 </style>

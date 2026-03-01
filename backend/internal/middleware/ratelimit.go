@@ -4,7 +4,6 @@ import (
 	"context"
 	"net"
 	"net/http"
-	"strconv"
 	"strings"
 	"time"
 
@@ -13,19 +12,20 @@ import (
 )
 
 type RateLimiter struct {
-	client *redis.Client
-	prefix string
+	client     *redis.Client
+	prefix     string
+	trustProxy bool
 }
 
-func NewRateLimiter(client *redis.Client, prefix string) *RateLimiter {
+func NewRateLimiter(client *redis.Client, prefix string, trustProxy bool) *RateLimiter {
 	if client == nil {
 		return nil
 	}
-	return &RateLimiter{client: client, prefix: prefix}
+	return &RateLimiter{client: client, prefix: prefix, trustProxy: trustProxy}
 }
 
 func (rl *RateLimiter) key(name string, r *http.Request) string {
-	ip := clientIP(r)
+	ip := rl.clientIP(r)
 	if ip == "" {
 		ip = "unknown"
 	}
@@ -64,16 +64,18 @@ func (rl *RateLimiter) Middleware(name string, limit int, window time.Duration) 
 	}
 }
 
-func clientIP(r *http.Request) string {
-	xff := strings.TrimSpace(r.Header.Get("X-Forwarded-For"))
-	if xff != "" {
-		parts := strings.Split(xff, ",")
-		if len(parts) > 0 {
-			return strings.TrimSpace(parts[0])
+func (rl *RateLimiter) clientIP(r *http.Request) string {
+	if rl.trustProxy {
+		xff := strings.TrimSpace(r.Header.Get("X-Forwarded-For"))
+		if xff != "" {
+			parts := strings.Split(xff, ",")
+			if len(parts) > 0 {
+				return strings.TrimSpace(parts[0])
+			}
 		}
-	}
-	if xrip := strings.TrimSpace(r.Header.Get("X-Real-IP")); xrip != "" {
-		return xrip
+		if xrip := strings.TrimSpace(r.Header.Get("X-Real-IP")); xrip != "" {
+			return xrip
+		}
 	}
 	host, _, err := net.SplitHostPort(strings.TrimSpace(r.RemoteAddr))
 	if err == nil {
@@ -87,16 +89,4 @@ func ParseLimitPerMinute(value int) (limit int, window time.Duration) {
 		return 0, time.Minute
 	}
 	return value, time.Minute
-}
-
-func ParseLimitFromHeader(r *http.Request, header string) int {
-	v := strings.TrimSpace(r.Header.Get(header))
-	if v == "" {
-		return 0
-	}
-	n, err := strconv.Atoi(v)
-	if err != nil {
-		return 0
-	}
-	return n
 }

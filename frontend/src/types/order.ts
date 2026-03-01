@@ -59,3 +59,29 @@ export interface OrderQueryParams {
   page?: number
   pageSize?: number
 }
+
+export interface DailyRevenue {
+  date: string
+  amount: number
+  orders: number
+}
+
+export interface PopularItemStat {
+  dishId: string
+  dishName: { zh: string; en: string }
+  count: number
+}
+
+export interface OrderStats {
+  totalOrders: number
+  paidRevenue: number
+  pendingOrders: number
+  dailyRevenue: DailyRevenue[]
+  popularItems: PopularItemStat[]
+  ordersByType: Record<string, number>
+}
+
+export interface StatsQueryParams {
+  from?: string
+  to?: string
+}

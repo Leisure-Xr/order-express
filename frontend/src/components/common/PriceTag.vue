@@ -70,10 +70,15 @@ const hasDiscount = computed(
 .price-tag--lg {
   .price-current {
     font-size: 24px;
+    background: linear-gradient(135deg, #e74c3c, #f0574a);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
   }
 
   .price-original {
     font-size: 16px;
+    color: #c0c4cc;
   }
 }
 </style>

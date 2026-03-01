@@ -158,8 +158,14 @@ async function submit() {
 }
 
 .card {
-  border-radius: 12px;
+  border-radius: 14px;
   margin-bottom: 12px;
+  transition: box-shadow var(--app-transition-base);
+  border: 1px solid rgba(0, 0, 0, 0.03);
+
+  &:hover {
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.06);
+  }
 }
 
 .section {
@@ -175,9 +181,10 @@ async function submit() {
 
 .summary {
   background: #ffffff;
-  border-radius: 12px;
-  padding: 14px;
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
+  border-radius: 16px;
+  padding: 18px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  border: 1px solid rgba(0, 0, 0, 0.03);
 }
 
 .row {
@@ -191,17 +198,21 @@ async function submit() {
 .row.total {
   margin-top: 10px;
   padding-top: 10px;
-  border-top: 1px dashed #e5e7eb;
+  border-top: 1.5px dashed rgba(231, 76, 60, 0.2);
   font-weight: 800;
   color: #303133;
 }
 
 .total-price {
   color: #e74c3c;
+  font-size: 18px;
 }
 
 .pay-btn {
   width: 100%;
   margin-top: 10px;
+  height: 48px;
+  font-size: 16px;
+  font-weight: 700;
 }
 </style>

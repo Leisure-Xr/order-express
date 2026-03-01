@@ -57,7 +57,14 @@ function statusTagType(status: Table['status']): 'success' | 'warning' | 'info' 
 
 <style scoped lang="scss">
 .table-card {
-  border-radius: 12px;
+  border-radius: 14px;
+  transition: transform var(--app-transition-base),
+              box-shadow var(--app-transition-base);
+
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.10);
+  }
 }
 
 .top {
@@ -86,7 +93,9 @@ function statusTagType(status: Table['status']): 'success' | 'warning' | 'info' 
 }
 
 .actions {
-  margin-top: 10px;
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid rgba(0, 0, 0, 0.04);
   display: flex;
   gap: 8px;
   flex-wrap: wrap;

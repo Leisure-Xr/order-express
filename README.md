@@ -33,6 +33,7 @@ docker compose up -d --build
 访问：
 
 - 前端：`http://localhost:8080`
+- 商家后台：`http://localhost:8080/admin/login`
 - 后端（可选直连）：`http://localhost:3000/healthz`
 
 如果端口冲突：

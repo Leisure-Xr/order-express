@@ -6,7 +6,7 @@ export const useAppStore = defineStore('app', () => {
     (localStorage.getItem('locale') as 'zh-CN' | 'en') || 'zh-CN',
   )
   const isLoading = ref(false)
-  const sidebarCollapsed = ref(false)
+  const sidebarCollapsed = ref(localStorage.getItem('sidebarCollapsed') === '1')
   const currentTableId = ref<string | null>(
     localStorage.getItem('tableId') || null,
   )
@@ -25,8 +25,13 @@ export const useAppStore = defineStore('app', () => {
     }
   }
 
+  function setSidebarCollapsed(collapsed: boolean) {
+    sidebarCollapsed.value = collapsed
+    localStorage.setItem('sidebarCollapsed', collapsed ? '1' : '0')
+  }
+
   function toggleSidebar() {
-    sidebarCollapsed.value = !sidebarCollapsed.value
+    setSidebarCollapsed(!sidebarCollapsed.value)
   }
 
   return {
@@ -36,6 +41,7 @@ export const useAppStore = defineStore('app', () => {
     currentTableId,
     setLocale,
     setTableFromQuery,
+    setSidebarCollapsed,
     toggleSidebar,
   }
 })

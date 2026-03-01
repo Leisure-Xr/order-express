@@ -36,10 +36,14 @@ func New(db *gorm.DB, cfg *config.Config, c *cache.Cache, rl *middleware.RateLim
 	var loginHandler http.Handler = http.HandlerFunc(authH.Login)
 	var orderCreateHandler http.Handler = http.HandlerFunc(orderH.Create)
 	var paymentInitHandler http.Handler = http.HandlerFunc(payH.Initiate)
+	var orderGetHandler http.Handler = http.HandlerFunc(orderH.GetByID)
+	var paymentGetHandler http.Handler = http.HandlerFunc(payH.GetByID)
 	if cfg.RateLimit.Enabled && rl != nil {
 		loginHandler = rl.Middleware("login", cfg.RateLimit.LoginPerMin, time.Minute)(loginHandler)
 		orderCreateHandler = rl.Middleware("order_create", cfg.RateLimit.OrderCreatePerMin, time.Minute)(orderCreateHandler)
 		paymentInitHandler = rl.Middleware("payment_initiate", cfg.RateLimit.PaymentPerMin, time.Minute)(paymentInitHandler)
+		orderGetHandler = rl.Middleware("order_get", cfg.RateLimit.PublicReadPerMin, time.Minute)(orderGetHandler)
+		paymentGetHandler = rl.Middleware("payment_get", cfg.RateLimit.PublicReadPerMin, time.Minute)(paymentGetHandler)
 	}
 
 	// Auth
@@ -65,15 +69,16 @@ func New(db *gorm.DB, cfg *config.Config, c *cache.Cache, rl *middleware.RateLim
 
 	// Orders — note: fixed paths must come before wildcard paths
 	mux.Handle("GET /api/orders/history", auth(requireAdmin(http.HandlerFunc(orderH.History))))
+	mux.Handle("GET /api/orders/stats", auth(requireAdmin(http.HandlerFunc(orderH.Stats))))
 	mux.Handle("GET /api/orders", auth(requireAdmin(http.HandlerFunc(orderH.List))))
 	mux.Handle("POST /api/orders", orderCreateHandler)
-	mux.HandleFunc("GET /api/orders/{id}", orderH.GetByID)
+	mux.Handle("GET /api/orders/{id}", orderGetHandler)
 	mux.Handle("PATCH /api/orders/{id}/status", auth(requireAdmin(http.HandlerFunc(orderH.UpdateStatus))))
 	mux.Handle("GET /api/orders/{orderId}/payments", auth(requireAdmin(http.HandlerFunc(payH.ByOrderID))))
 
 	// Payments
 	mux.Handle("POST /api/payments/initiate", paymentInitHandler)
-	mux.HandleFunc("GET /api/payments/{paymentId}", payH.GetByID)
+	mux.Handle("GET /api/payments/{paymentId}", paymentGetHandler)
 	mux.Handle("POST /api/payments/{paymentId}/refund", auth(requireAdmin(http.HandlerFunc(payH.Refund))))
 
 	// Public tables (customer table selection)
@@ -96,5 +101,5 @@ func New(db *gorm.DB, cfg *config.Config, c *cache.Cache, rl *middleware.RateLim
 	mux.HandleFunc("GET /api/store", storeH.GetInfo)
 	mux.Handle("PATCH /api/store", auth(requireAdmin(http.HandlerFunc(storeH.UpdateInfo))))
 
-	return middleware.CORS(cfg)(mux)
+	return middleware.MaxBodySize(1 << 20)(middleware.CORS(cfg)(mux)) // 1 MiB body limit
 }

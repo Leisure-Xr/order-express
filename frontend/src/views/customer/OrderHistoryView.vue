@@ -149,10 +149,24 @@ async function reorder(order: Order) {
   flex-direction: column;
   gap: 12px;
   padding-bottom: 12px;
+
+  > :nth-child(1) { animation: fadeSlideUp 0.3s ease 0.05s both; }
+  > :nth-child(2) { animation: fadeSlideUp 0.3s ease 0.10s both; }
+  > :nth-child(3) { animation: fadeSlideUp 0.3s ease 0.15s both; }
+  > :nth-child(4) { animation: fadeSlideUp 0.3s ease 0.20s both; }
+  > :nth-child(5) { animation: fadeSlideUp 0.3s ease 0.25s both; }
 }
 
 .order-card {
-  border-radius: 12px;
+  border-radius: 14px;
+  border: 1px solid rgba(0, 0, 0, 0.03);
+  transition: transform var(--app-transition-base),
+              box-shadow var(--app-transition-base);
+
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.10);
+  }
 }
 
 .top {
@@ -200,7 +214,10 @@ async function reorder(order: Order) {
 }
 
 .amount {
-  color: #e74c3c;
+  background: linear-gradient(135deg, #e74c3c, #f0574a);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
   font-weight: 900;
   font-size: 16px;
 }

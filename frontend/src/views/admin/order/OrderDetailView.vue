@@ -5,6 +5,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import { useOrderStore } from '@/stores/order'
 import { useLocaleText } from '@/composables/useLocaleText'
+import AdminPageHeader from '@/components/admin/AdminPageHeader.vue'
 import { formatDate } from '@/utils/format'
 import type { Order, OrderStatus } from '@/types'
 
@@ -73,13 +74,12 @@ async function updateStatus(status: OrderStatus) {
 </script>
 
 <template>
-  <div class="order-detail">
-    <div class="toolbar">
-      <div class="title">{{ t('routes.orderDetail') }}</div>
-      <div class="actions">
+  <div class="order-detail admin-page">
+    <AdminPageHeader :title="t('routes.orderDetail')">
+      <template #actions>
         <el-button @click="router.back()">{{ t('common.back') }}</el-button>
-      </div>
-    </div>
+      </template>
+    </AdminPageHeader>
 
     <el-skeleton v-if="loading" :rows="8" animated />
 
@@ -91,7 +91,7 @@ async function updateStatus(status: OrderStatus) {
       <el-card shadow="never" class="card">
         <div class="info-grid">
           <div class="info-item">
-            <div class="label">Order No.</div>
+            <div class="label">{{ t('payment.orderNumber') }}</div>
             <div class="value">{{ order.orderNumber }}</div>
           </div>
           <div class="info-item">
@@ -117,7 +117,7 @@ async function updateStatus(status: OrderStatus) {
             </div>
           </div>
           <div class="info-item">
-            <div class="label">Payment</div>
+            <div class="label">{{ t('order.payment') }}</div>
             <div class="value">
               {{ order.payment.method }} /
               <el-tag :type="order.payment.status === 'paid' ? 'success' : 'info'">
@@ -126,7 +126,7 @@ async function updateStatus(status: OrderStatus) {
             </div>
           </div>
           <div class="info-item">
-            <div class="label">Created</div>
+            <div class="label">{{ t('order.createdAt') }}</div>
             <div class="value">{{ formatDate(order.createdAt) }}</div>
           </div>
         </div>
@@ -149,30 +149,32 @@ async function updateStatus(status: OrderStatus) {
 
       <el-card shadow="never" class="card">
         <template #header>
-          <div class="card-title">Items</div>
+          <div class="card-title">{{ t('order.items') }}</div>
         </template>
 
-        <el-table :data="order.items" stripe>
-          <el-table-column label="Dish" min-width="220">
-            <template #default="{ row }">
-              <div class="dish-name">{{ localText(row.dishName) }}</div>
-              <div v-if="row.selectedOptions.length" class="dish-opts">
-                <span v-for="(opt, idx) in row.selectedOptions" :key="idx" class="opt">
-                  {{ opt.optionName }}: {{ opt.valueName }}
-                </span>
-              </div>
-            </template>
-          </el-table-column>
-          <el-table-column label="Qty" width="90">
-            <template #default="{ row }">{{ row.quantity }}</template>
-          </el-table-column>
-          <el-table-column label="Unit" width="120">
-            <template #default="{ row }">¥{{ row.unitPrice.toFixed(2) }}</template>
-          </el-table-column>
-          <el-table-column label="Subtotal" width="140">
-            <template #default="{ row }">¥{{ row.subtotal.toFixed(2) }}</template>
-          </el-table-column>
-        </el-table>
+        <div class="admin-table-scroll">
+          <el-table :data="order.items" stripe>
+            <el-table-column :label="t('dashboard.menuItem')" min-width="220">
+              <template #default="{ row }">
+                <div class="dish-name">{{ localText(row.dishName) }}</div>
+                <div v-if="row.selectedOptions.length" class="dish-opts">
+                  <span v-for="(opt, idx) in row.selectedOptions" :key="idx" class="opt">
+                    {{ opt.optionName }}: {{ opt.valueName }}
+                  </span>
+                </div>
+              </template>
+            </el-table-column>
+            <el-table-column :label="t('order.qty')" width="90">
+              <template #default="{ row }">{{ row.quantity }}</template>
+            </el-table-column>
+            <el-table-column :label="t('order.unitPrice')" width="120">
+              <template #default="{ row }">¥{{ row.unitPrice.toFixed(2) }}</template>
+            </el-table-column>
+            <el-table-column :label="t('order.subtotal')" width="140">
+              <template #default="{ row }">¥{{ row.subtotal.toFixed(2) }}</template>
+            </el-table-column>
+          </el-table>
+        </div>
 
         <div class="totals">
           <div class="row">
@@ -210,19 +212,6 @@ async function updateStatus(status: OrderStatus) {
 </template>
 
 <style scoped lang="scss">
-.toolbar {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 12px;
-}
-
-.title {
-  font-size: 18px;
-  font-weight: 800;
-  color: #303133;
-}
-
 .content {
   display: flex;
   flex-direction: column;
@@ -230,7 +219,12 @@ async function updateStatus(status: OrderStatus) {
 }
 
 .card {
-  border-radius: 12px;
+  border-radius: 14px;
+  transition: box-shadow var(--app-transition-base);
+
+  &:hover {
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.06);
+  }
 }
 
 .card-title {
@@ -243,13 +237,21 @@ async function updateStatus(status: OrderStatus) {
   gap: 12px;
 }
 
+.info-item {
+  background: #f9fafb;
+  border-radius: 10px;
+  padding: 10px 12px;
+}
+
 .info-item .label {
-  font-size: 12px;
+  font-size: 11px;
   color: #909399;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
 
 .info-item .value {
-  margin-top: 2px;
+  margin-top: 4px;
   font-weight: 700;
   color: #303133;
 }
@@ -300,16 +302,23 @@ async function updateStatus(status: OrderStatus) {
 
 .row.total {
   padding-top: 8px;
-  border-top: 1px dashed #e5e7eb;
+  border-top: 1.5px dashed rgba(231, 76, 60, 0.2);
   font-weight: 900;
   color: #303133;
 }
 
 .price {
   color: #e74c3c;
+  font-size: 16px;
 }
 
-@media (max-width: 1024px) {
+@media (max-width: 900px) {
+  .info-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 600px) {
   .info-grid {
     grid-template-columns: 1fr;
   }

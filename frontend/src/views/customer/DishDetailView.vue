@@ -148,10 +148,13 @@ function addToCart() {
 
 .hero {
   width: 100%;
-  height: 200px;
+  height: 220px;
   object-fit: cover;
-  border-radius: 14px;
-  background: #f2f2f2;
+  border-radius: 16px;
+  background: linear-gradient(110deg, #f0f0f0 30%, #fafafa 50%, #f0f0f0 70%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite linear;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
 }
 
 .card {
@@ -159,10 +162,15 @@ function addToCart() {
   border-radius: 14px;
   padding: 14px;
   box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
+  transition: box-shadow var(--app-transition-base);
+
+  &:hover {
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+  }
 }
 
 .name {
-  font-size: 18px;
+  font-size: 20px;
   font-weight: 800;
   color: #303133;
 }
@@ -193,11 +201,13 @@ function addToCart() {
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  background: rgba(255, 255, 255, 0.92);
-  backdrop-filter: blur(10px);
+  background: var(--app-glass-bg-strong);
+  backdrop-filter: var(--app-glass-blur);
   border-radius: 14px;
   padding: 12px 14px;
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.08);
+  box-shadow: 0 -4px 24px rgba(0, 0, 0, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  animation: slideUp 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .total {

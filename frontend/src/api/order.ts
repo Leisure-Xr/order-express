@@ -1,6 +1,6 @@
 import { mockDelay, successResponse, errorResponse } from './index'
 import type { ApiResponse } from './index'
-import type { Order, OrderStatus, OrderQueryParams, CreateOrderPayload, PaginatedResult } from '@/types'
+import type { Order, OrderStatus, OrderQueryParams, CreateOrderPayload, PaginatedResult, OrderStats, StatsQueryParams } from '@/types'
 import { orderHandlers } from './mock/handlers/order'
 import { apiRequest, isMockApiEnabled } from './client'
 import { endpoints } from './endpoints'
@@ -120,5 +120,27 @@ export async function getOrderHistoryApi(): Promise<ApiResponse<Order[]>> {
   return apiRequest<Order[]>({
     path: endpoints.orders.history,
     method: 'GET',
+  })
+}
+
+export async function getOrderStatsApi(
+  params?: StatsQueryParams,
+): Promise<ApiResponse<OrderStats>> {
+  if (isMockApiEnabled()) {
+    await mockDelay()
+    return successResponse({
+      totalOrders: 0,
+      paidRevenue: 0,
+      pendingOrders: 0,
+      dailyRevenue: [],
+      popularItems: [],
+      ordersByType: {},
+    })
+  }
+
+  return apiRequest<OrderStats>({
+    path: endpoints.orders.stats,
+    method: 'GET',
+    query: params,
   })
 }

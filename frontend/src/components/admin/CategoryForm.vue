@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 
 export type CategoryFormValue = {
@@ -10,9 +9,10 @@ export type CategoryFormValue = {
   status: 'active' | 'inactive'
 }
 
+const model = defineModel<CategoryFormValue>({ required: true })
+
 const props = withDefaults(
   defineProps<{
-    modelValue: CategoryFormValue
     disabled?: boolean
   }>(),
   {
@@ -20,33 +20,7 @@ const props = withDefaults(
   },
 )
 
-const emit = defineEmits<{
-  (e: 'update:modelValue', value: CategoryFormValue): void
-}>()
-
 const { t } = useI18n()
-
-function clone<T>(value: T): T {
-  return JSON.parse(JSON.stringify(value)) as T
-}
-
-const model = ref<CategoryFormValue>(clone(props.modelValue))
-
-watch(
-  () => props.modelValue,
-  (value) => {
-    model.value = clone(value)
-  },
-  { deep: true },
-)
-
-watch(
-  model,
-  (value) => {
-    emit('update:modelValue', clone(value))
-  },
-  { deep: true },
-)
 </script>
 
 <template>

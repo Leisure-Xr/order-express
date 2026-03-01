@@ -96,4 +96,26 @@ $desktop: 1280px;
 
   --el-mask-color: rgba(2, 6, 23, 0.45);
   --el-mask-color-extra-light: rgba(2, 6, 23, 0.22);
+
+  // Extended shadow elevation system
+  --app-shadow-xs: 0 1px 2px rgba(2, 6, 23, 0.05);
+  --app-shadow-card: 0 2px 8px rgba(2, 6, 23, 0.06);
+  --app-shadow-card-hover: 0 8px 28px rgba(2, 6, 23, 0.12);
+  --app-shadow-lg: 0 16px 48px rgba(2, 6, 23, 0.14);
+
+  // Brand gradient tokens
+  --app-gradient-primary: linear-gradient(135deg, #e74c3c 0%, #f0574a 50%, #e85d4a 100%);
+  --app-gradient-primary-light: linear-gradient(135deg, rgba(231,76,60,0.12) 0%, rgba(243,156,18,0.08) 100%);
+  --app-gradient-hero: linear-gradient(135deg, rgba(231,76,60,0.14) 0%, rgba(52,152,219,0.08) 50%, rgba(243,156,18,0.06) 100%);
+  --app-gradient-success: linear-gradient(135deg, #27ae60 0%, #2ecc71 100%);
+
+  // Transition timing tokens
+  --app-transition-fast: 0.15s ease;
+  --app-transition-base: 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  --app-transition-slow: 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+
+  // Glassmorphism tokens
+  --app-glass-bg: rgba(255, 255, 255, 0.85);
+  --app-glass-bg-strong: rgba(255, 255, 255, 0.92);
+  --app-glass-blur: blur(20px);
 }
